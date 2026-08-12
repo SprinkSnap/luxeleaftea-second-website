@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1500" viewBox="0 0 1200 1500" role="img" aria-label="Silver Needle">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2C3A38"/>
+      <stop offset="100%" stop-color="#0B1210"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="40%" r="45%">
+      <stop offset="0%" stop-color="#F0E6D2" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#F0E6D2" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="1500" fill="url(#g)"/>
+  <rect width="1200" height="1500" fill="url(#glow)"/>
+  <ellipse cx="600" cy="720" rx="220" ry="70" fill="#F0E6D2" opacity="0.25"/>
+  <path d="M470 640c40-90 120-140 180-150 60 10 140 60 180 150 10 24-8 40-34 40H504c-26 0-44-16-34-40z" fill="#F0E6D2" opacity="0.9"/>
+  <path d="M520 520c30-10 50 20 40 48M680 510c-28-8-48 24-36 50" stroke="#7CB069" stroke-width="10" fill="none" stroke-linecap="round"/>
+  <text x="600" y="1280" text-anchor="middle" font-family="Georgia, serif" font-size="54" fill="#F0E6D2">Silver Needle</text>
+  <text x="600" y="1345" text-anchor="middle" font-family="Georgia, serif" font-size="28" fill="#E8E4DC" letter-spacing="6">LUX LEAF TEA</text>
+</svg>

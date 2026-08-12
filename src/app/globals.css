@@ -1,0 +1,196 @@
+@import "tailwindcss";
+
+:root {
+  /* Brand system derived from Lux Leaf logo */
+  --brand-forest: #1b3a2f;
+  --brand-forest-deep: #12261f;
+  --brand-gold: #c4a35a;
+  --brand-gold-bright: #d4b56a;
+  --brand-leaf: #5f8f4c;
+  --brand-amber: #c8923a;
+  --brand-black: #0b0d0c;
+  --brand-charcoal: #1a1d1b;
+  --brand-ink: #142019;
+  --brand-cream: #f3f1ea;
+  --brand-mist: #eef2ef;
+  --brand-stone: #f7f8f6;
+  --brand-muted: #5c685f;
+  --brand-line: rgba(27, 58, 47, 0.12);
+
+  --background: var(--brand-stone);
+  --foreground: var(--brand-ink);
+  --surface: #ffffff;
+  --surface-muted: var(--brand-mist);
+  --cta: #9a6b1f;
+  --cta-hover: #825912;
+  --cta-text: #fffdf8;
+  --header-bg: #0b0d0c;
+  --header-fg: #f4f1e8;
+  --focus: #c4a35a;
+
+  --radius-sm: 0.375rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 1rem;
+
+  --header-height: 5.5rem;
+  --header-height-compact: 4.25rem;
+  --announcement-height: 2.25rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-brand-forest: var(--brand-forest);
+  --color-brand-forest-deep: var(--brand-forest-deep);
+  --color-brand-gold: var(--brand-gold);
+  --color-brand-leaf: var(--brand-leaf);
+  --color-brand-amber: var(--brand-amber);
+  --color-brand-black: var(--brand-black);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-mist: var(--brand-mist);
+  --color-brand-stone: var(--brand-stone);
+  --color-brand-muted: var(--brand-muted);
+  --color-surface: var(--surface);
+  --color-cta: var(--cta);
+  --color-cta-hover: var(--cta-hover);
+  --color-header: var(--header-bg);
+  --font-sans: var(--font-body);
+  --font-serif: var(--font-display);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(196, 163, 90, 0.08), transparent 55%),
+    radial-gradient(900px 500px at 90% 0%, rgba(95, 143, 76, 0.06), transparent 50%),
+    linear-gradient(180deg, #f7f8f6 0%, #f3f5f2 40%, #f7f8f6 100%);
+  color: var(--foreground);
+  font-family: var(--font-body), "Segoe UI", sans-serif;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+.font-display {
+  font-family: var(--font-display), Georgia, "Times New Roman", serif;
+  letter-spacing: -0.02em;
+  color: var(--brand-forest-deep);
+}
+
+a {
+  color: inherit;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: rgba(196, 163, 90, 0.35);
+  color: var(--brand-ink);
+}
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -100%;
+  z-index: 100;
+  background: var(--brand-forest);
+  color: white;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+}
+
+.skip-link:focus {
+  top: 1rem;
+}
+
+.container-page {
+  width: min(1120px, calc(100% - 2rem));
+  margin-inline: auto;
+}
+
+.container-wide {
+  width: min(1280px, calc(100% - 2rem));
+  margin-inline: auto;
+}
+
+.texture-leaf {
+  background-image:
+    radial-gradient(rgba(27, 58, 47, 0.04) 0.7px, transparent 0.7px);
+  background-size: 18px 18px;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes soft-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.7s ease both;
+}
+
+.animate-fade-up-delay {
+  animation: fade-up 0.8s ease 0.12s both;
+}
+
+.cart-badge-pop {
+  animation: soft-pulse 0.45s ease;
+}
+
+.sticky-header {
+  transition:
+    background-color 0.25s ease,
+    box-shadow 0.25s ease,
+    min-height 0.25s ease;
+}
+
+.prose-tea {
+  max-width: 65ch;
+  line-height: 1.75;
+}
+
+.prose-tea h2 {
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+  font-size: 1.5rem;
+}
+
+.prose-tea p {
+  margin-bottom: 1rem;
+  color: var(--brand-muted);
+}
