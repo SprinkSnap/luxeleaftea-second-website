@@ -4,11 +4,37 @@ import { stockAvailable } from "@/lib/utils";
 
 export const CART_COOKIE = "llt_cart";
 
-export async function getCartId() {
+const cartInclude = {
+  items: {
+    include: {
+      variant: {
+        include: {
+          product: true,
+          inventory: true,
+        },
+      },
+    },
+    orderBy: { createdAt: "asc" as const },
+  },
+};
+
+export type CartWithItems = NonNullable<
+  Awaited<ReturnType<typeof getCart>>
+>;
+
+/** Read-only cart lookup for Server Components (never mutates cookies). */
+export async function getCart() {
   const jar = await cookies();
-  return jar.get(CART_COOKIE)?.value;
+  const existingId = jar.get(CART_COOKIE)?.value;
+  if (!existingId) return null;
+
+  return prisma.cart.findUnique({
+    where: { id: existingId },
+    include: cartInclude,
+  });
 }
 
+/** Create or load cart. Only call from Route Handlers / Server Actions. */
 export async function getOrCreateCart() {
   const jar = await cookies();
   const existingId = jar.get(CART_COOKIE)?.value;
@@ -37,30 +63,14 @@ export async function getOrCreateCart() {
   return cart;
 }
 
-const cartInclude = {
-  items: {
-    include: {
-      variant: {
-        include: {
-          product: true,
-          inventory: true,
-        },
-      },
-    },
-    orderBy: { createdAt: "asc" as const },
-  },
-};
-
-export type CartWithItems = Awaited<ReturnType<typeof getOrCreateCart>>;
-
-export function cartSubtotal(cart: CartWithItems) {
+export function cartSubtotal(cart: { items: CartWithItems["items"] }) {
   return cart.items.reduce(
     (sum, item) => sum + item.quantity * item.variant.retailPrice,
     0,
   );
 }
 
-export function cartItemCount(cart: CartWithItems) {
+export function cartItemCount(cart: { items: CartWithItems["items"] }) {
   return cart.items.reduce((sum, item) => sum + item.quantity, 0);
 }
 

@@ -1,6 +1,6 @@
 import { createMetadata } from "@/lib/seo";
 import { CheckoutForm } from "@/components/cart/CheckoutForm";
-import { cartItemCount, cartSubtotal, getOrCreateCart } from "@/lib/cart";
+import { cartItemCount, cartSubtotal, getCart } from "@/lib/cart";
 import { formatMoney, parseJsonArray } from "@/lib/utils";
 import { siteConfig } from "@/lib/site";
 import Link from "next/link";
@@ -13,14 +13,8 @@ export const metadata = createMetadata({
 });
 
 export default async function CheckoutPage() {
-  const cart = await getOrCreateCart();
-  const subtotal = cartSubtotal(cart);
-  const shipping =
-    subtotal >= siteConfig.freeShippingThreshold || subtotal === 0 ? 0 : 695;
-  const tax = Math.round(subtotal * 0.08);
-  const total = subtotal + shipping + tax;
-
-  if (!cartItemCount(cart)) {
+  const cart = await getCart();
+  if (!cart || !cartItemCount(cart)) {
     return (
       <div className="container-page px-4 py-20 text-center">
         <h1 className="font-display text-4xl">Your cart is empty</h1>
@@ -33,6 +27,12 @@ export default async function CheckoutPage() {
       </div>
     );
   }
+
+  const subtotal = cartSubtotal(cart);
+  const shipping =
+    subtotal >= siteConfig.freeShippingThreshold || subtotal === 0 ? 0 : 695;
+  const tax = Math.round(subtotal * 0.08);
+  const total = subtotal + shipping + tax;
 
   return (
     <div className="container-wide grid gap-10 px-4 py-10 lg:grid-cols-[1.1fr_0.9fr] lg:py-14">
