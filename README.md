@@ -78,6 +78,15 @@ The app runs on Cloudflare Workers through the [OpenNext](https://opennext.js.or
 
 Configuration lives in `wrangler.jsonc` (`nodejs_compat` is required) and `open-next.config.ts`.
 
+### Deploying from Git (Cloudflare Workers Builds)
+
+If you connect the repo to Cloudflare so it builds on push, set the project's build settings to run the **OpenNext** build (not a plain `next build`, which does not emit the `.open-next/` worker bundle that deploy needs):
+
+- **Build command:** `npx opennextjs-cloudflare build`
+- **Deploy command:** `npx wrangler deploy`
+
+Using `npm run build` as the build command fails at deploy with `Could not find compiled Open Next config, did you run the build command?`, because `npm run build` only runs `next build`. The `npx opennextjs-cloudflare build` command runs the Next.js build internally **and** compiles the Worker. Set the runtime secrets (`DATABASE_URL`, etc.) in the Cloudflare dashboard or via `wrangler secret put`.
+
 ### Local Workers preview
 
 `npm run preview` runs the built app in the Workers runtime (`workerd`) locally. To point it at your **local** Postgres, copy `.dev.vars.example` to `.dev.vars` and start the bundled WebSocket→TCP proxy so the serverless driver can reach it:
