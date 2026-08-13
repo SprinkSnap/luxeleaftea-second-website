@@ -1,0 +1,20 @@
+# Local Cloudflare Workers preview secrets (used by `npm run preview`).
+# Copy to `.dev.vars` and fill in. This file mirrors the secrets you set in
+# production with `wrangler secret put <NAME>`.
+
+# Pooled Postgres connection string. Use a serverless Postgres such as Neon so
+# the Workers runtime can connect over HTTP/WebSocket. Required.
+DATABASE_URL="postgresql://user:password@ep-xxx-pooler.region.aws.neon.tech/luxleaftea?sslmode=require"
+
+# Optional: only for local `npm run preview` against a LOCAL Postgres. Points the
+# serverless driver at a local WebSocket->TCP proxy (see scripts/neon-ws-proxy.mjs).
+# Leave unset for real deployments / real Neon databases.
+# NEON_WS_PROXY="localhost:5488"
+
+# Optional: enabling these switches checkout from demo mode to real Stripe.
+STRIPE_SECRET_KEY=""
+STRIPE_WEBHOOK_SECRET=""
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=""
+
+# Public site URL for canonical URLs / Stripe redirects.
+NEXT_PUBLIC_SITE_URL="http://localhost:8788"

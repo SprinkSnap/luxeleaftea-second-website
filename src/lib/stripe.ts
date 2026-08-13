@@ -7,6 +7,9 @@ export function getStripe() {
   return new Stripe(key, {
     apiVersion: "2025-02-24.acacia",
     typescript: true,
+    // The Workers runtime has no Node HTTP stack, so use the fetch-based
+    // client. Stripe.createFetchHttpClient() works in Node too.
+    httpClient: Stripe.createFetchHttpClient(),
   });
 }
 

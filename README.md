@@ -6,7 +6,8 @@ Premium loose-leaf tea ecommerce boutique built with Next.js App Router, TypeScr
 
 - Next.js (App Router) + React + TypeScript
 - Tailwind CSS design system derived from Lux Leaf logo colours
-- Prisma ORM (SQLite for local/dev; PostgreSQL recommended for production)
+- Prisma ORM on PostgreSQL (local Postgres for dev; serverless Postgres such as Neon in production)
+- Deployable to Cloudflare Workers via the OpenNext adapter (`@opennextjs/cloudflare`)
 - Stripe Checkout (with demo checkout when Stripe keys are absent)
 - Modular supplier notifications (Email / SMS / Slack / WeCom)
 - Catalog-grounded AI shopping assistant
@@ -23,10 +24,18 @@ The header uses a responsive `<picture>` implementation and links to `/` with ac
 
 ## Getting started
 
+You need a running PostgreSQL. To create a local database:
+
+```bash
+createdb luxleaftea   # or: psql -c "CREATE DATABASE luxleaftea;"
+```
+
+Then:
+
 ```bash
 npm install
-cp .env.example .env
-npx prisma migrate dev
+cp .env.example .env          # defaults point at a local Postgres
+npx prisma migrate deploy     # or `npx prisma migrate dev`
 npm run db:seed
 npm run dev
 ```
@@ -42,6 +51,44 @@ Open [http://localhost:3000](http://localhost:3000).
 - `npm run typecheck` — TypeScript check
 - `npm run db:seed` — seed catalog, suppliers, content, admin user
 - `npm run db:studio` — Prisma Studio
+- `npm run preview` — build and run the app in the Cloudflare Workers runtime locally
+- `npm run deploy` — build and deploy to Cloudflare Workers
+
+## Deploy to Cloudflare Workers
+
+The app runs on Cloudflare Workers through the [OpenNext](https://opennext.js.org/cloudflare) adapter. Because the Workers runtime cannot open raw TCP database sockets, Prisma talks to Postgres through the Neon serverless driver adapter on Workers (`src/lib/prisma.ts` selects it automatically at runtime); in Node.js it uses the standard Prisma engine. Use a serverless Postgres such as [Neon](https://neon.tech) in production.
+
+1. Create a Postgres database (e.g. a Neon project) and note the **pooled** and **direct** connection strings.
+2. Push the schema to it:
+   ```bash
+   DATABASE_URL="<direct-url>" DIRECT_URL="<direct-url>" npx prisma migrate deploy
+   DATABASE_URL="<direct-url>" DIRECT_URL="<direct-url>" npm run db:seed
+   ```
+3. Set the runtime secret (pooled URL) on the Worker:
+   ```bash
+   npx wrangler secret put DATABASE_URL      # paste the POOLED connection string
+   # optional, to enable real Stripe checkout:
+   npx wrangler secret put STRIPE_SECRET_KEY
+   npx wrangler secret put STRIPE_WEBHOOK_SECRET
+   ```
+4. Deploy:
+   ```bash
+   npm run deploy
+   ```
+
+Configuration lives in `wrangler.jsonc` (`nodejs_compat` is required) and `open-next.config.ts`.
+
+### Local Workers preview
+
+`npm run preview` runs the built app in the Workers runtime (`workerd`) locally. To point it at your **local** Postgres, copy `.dev.vars.example` to `.dev.vars` and start the bundled WebSocket→TCP proxy so the serverless driver can reach it:
+
+```bash
+cp .dev.vars.example .dev.vars   # set DATABASE_URL + NEON_WS_PROXY=localhost:5488
+node scripts/neon-ws-proxy.mjs   # in one terminal
+npm run preview                  # in another
+```
+
+For a real Neon database you don't need the proxy — just set `DATABASE_URL` in `.dev.vars` and leave `NEON_WS_PROXY` unset.
 
 ## Environment setup (merchant credentials)
 
@@ -49,7 +96,8 @@ Copy `.env.example` to `.env` and configure:
 
 | Variable | Purpose |
 | --- | --- |
-| `DATABASE_URL` | SQLite file URL or PostgreSQL connection string |
+| `DATABASE_URL` | PostgreSQL connection string (pooled URL in production) |
+| `DIRECT_URL` | Direct (non-pooled) PostgreSQL URL for Prisma Migrate / CLI |
 | `NEXT_PUBLIC_SITE_URL` | Canonical production domain (used in SEO + Stripe redirects) |
 | `STRIPE_SECRET_KEY` | Stripe secret key |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key |
