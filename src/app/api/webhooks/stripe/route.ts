@@ -22,7 +22,8 @@ export async function POST(request: Request) {
 
   let event;
   try {
-    event = stripe.webhooks.constructEvent(payload, signature, secret);
+    // Async variant uses WebCrypto (SubtleCrypto), required on the Workers runtime.
+    event = await stripe.webhooks.constructEventAsync(payload, signature, secret);
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Invalid signature" },

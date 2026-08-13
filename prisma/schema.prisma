@@ -3,8 +3,12 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  // Pooled connection used by the app at runtime.
+  url       = env("DATABASE_URL")
+  // Direct (non-pooled) connection used by Prisma Migrate / CLI. For a local
+  // Postgres this is the same as DATABASE_URL; for Neon use the direct URL.
+  directUrl = env("DIRECT_URL")
 }
 
 enum Role {
