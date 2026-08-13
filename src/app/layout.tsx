@@ -21,6 +21,12 @@ const body = Outfit({
   weight: ["300", "400", "500", "600", "700"],
 });
 
+// This is a database-driven storefront deployed to a serverless runtime
+// (Cloudflare Workers). Render on demand so pages read the database at request
+// time (when DATABASE_URL is available) instead of being prerendered at build
+// time. Applies to all nested routes.
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: {
