@@ -52,7 +52,8 @@ Open [http://localhost:3000](http://localhost:3000).
 - `npm run db:seed` — seed catalog, suppliers, content, admin user
 - `npm run db:studio` — Prisma Studio
 - `npm run preview` — build and run the app in the Cloudflare Workers runtime locally
-- `npm run deploy` — build and deploy to Cloudflare Workers
+- `npm run deploy` — build and deploy to Cloudflare Workers (serves immediately)
+- `npm run upload` — build and upload a Worker version (gradual / preview deploys)
 
 ## Deploy to Cloudflare Workers
 
@@ -77,6 +78,22 @@ The app runs on Cloudflare Workers through the [OpenNext](https://opennext.js.or
    ```
 
 Configuration lives in `wrangler.jsonc` (`nodejs_compat` is required) and `open-next.config.ts`.
+
+### Deploying from Git (Cloudflare Workers Builds)
+
+Workers Builds defaults (`npm run build` + `npx wrangler versions upload`) **do not work** for this app. `npm run build` only runs `next build` and never emits the `.open-next/` Worker bundle that Wrangler expects (`main` in `wrangler.jsonc` is `.open-next/worker.js`). That leaves the deploy step hanging or failing right after Wrangler starts.
+
+In the Worker → **Settings → Builds**, set:
+
+| Setting | Value |
+| --- | --- |
+| **Build command** | `npx opennextjs-cloudflare build` |
+| **Deploy command** (production branch) | `npx opennextjs-cloudflare deploy` |
+| **Non-production branch deploy command** | `npx opennextjs-cloudflare upload` |
+
+Do **not** use `npx wrangler deploy` / `npx wrangler versions upload` as the deploy command — OpenNext’s CLI populates the remote cache and uploads the adapter output. Keep `npm run build` as `prisma generate && next build` in `package.json`; OpenNext invokes that script internally.
+
+Also set the runtime secret `DATABASE_URL` (Neon pooled URL) on the Worker before expecting DB-backed routes to work.
 
 ### Local Workers preview
 
