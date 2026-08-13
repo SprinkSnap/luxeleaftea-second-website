@@ -3,10 +3,10 @@ export const siteConfig = {
   legalName: "Lux Leaf Tea",
   description:
     "Premium loose-leaf tea for an elevated everyday ritual — selected for flavour, aroma, and quality.",
-  url: process.env.NEXT_PUBLIC_SITE_URL || "https://www.luxleaftea.com",
-  supportEmail: "hello@luxleaftea.com",
-  locale: "en_US",
-  currency: "USD",
+  url: process.env.NEXT_PUBLIC_SITE_URL || "https://www.luxeleaftea.ca",
+  supportEmail: "hello@luxeleaftea.ca",
+  locale: "en_CA",
+  currency: "CAD",
   freeShippingThreshold: 5000,
   logo: {
     desktop: "/images/images/luxe-leaf-tea-logo-1200.webp",
