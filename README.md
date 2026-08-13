@@ -45,8 +45,8 @@ Open [http://localhost:3000](http://localhost:3000).
 ## Useful scripts
 
 - `npm run dev` — local development server
-- `npm run build` — production build
-- `npm run start` — start production server
+- `npm run build` — OpenNext Cloudflare build (`.open-next/`); safe for Workers Builds
+- `npm run start` — start production server (Node; local only)
 - `npm run lint` — ESLint
 - `npm run typecheck` — TypeScript check
 - `npm run db:seed` — seed catalog, suppliers, content, admin user
@@ -81,17 +81,21 @@ Configuration lives in `wrangler.jsonc` (`nodejs_compat` is required) and `open-
 
 ### Deploying from Git (Cloudflare Workers Builds)
 
-Workers Builds defaults (`npm run build` + `npx wrangler versions upload`) **do not work** for this app. `npm run build` only runs `next build` and never emits the `.open-next/` Worker bundle that Wrangler expects (`main` in `wrangler.jsonc` is `.open-next/worker.js`). That leaves the deploy step hanging or failing right after Wrangler starts.
+Set the Workers Builds **Build command** to:
 
-In the Worker → **Settings → Builds**, set:
+```bash
+npx opennextjs-cloudflare build
+```
+
+That is the [OpenNext-recommended](https://opennext.js.org/cloudflare/howtos/dev-deploy) command. It invokes `npm run build` internally (with `NEXT_PRIVATE_STANDALONE`) to compile Next.js, then emits `.open-next/`.
 
 | Setting | Value |
 | --- | --- |
 | **Build command** | `npx opennextjs-cloudflare build` |
-| **Deploy command** (production branch) | `npx opennextjs-cloudflare deploy` |
-| **Non-production branch deploy command** | `npx opennextjs-cloudflare upload` |
+| **Deploy command** (production) | `npx wrangler deploy` |
+| **Non-production deploy command** | `npx wrangler versions upload` |
 
-Do **not** use `npx wrangler deploy` / `npx wrangler versions upload` as the deploy command — OpenNext’s CLI populates the remote cache and uploads the adapter output. Keep `npm run build` as `prisma generate && next build` in `package.json`; OpenNext invokes that script internally.
+`package.json` `"build"` is `scripts/build.mjs`: when OpenNext re-invokes it, it runs `prisma generate` + `next build` only; when called directly (e.g. if the dashboard still has `npm run build`), it runs `opennextjs-cloudflare build` so deploy still finds `.open-next/`.
 
 Also set the runtime secret `DATABASE_URL` (Neon pooled URL) on the Worker before expecting DB-backed routes to work.
 
