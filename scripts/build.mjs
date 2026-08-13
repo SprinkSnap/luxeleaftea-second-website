@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 /**
- * Cloudflare Workers Builds runs `npm run build`, then `wrangler deploy`.
- * Wrangler forwards to `opennextjs-cloudflare deploy`, which needs `.open-next/`.
+ * Cloudflare Workers Builds should prefer:
+ *   npx opennextjs-cloudflare build
  *
- * OpenNext's own build sets NEXT_PRIVATE_STANDALONE and then invokes this
- * script again for the Next.js compile. Detect that and only run Next so we
- * do not recurse.
+ * This script also lets `npm run build` emit `.open-next/` when the dashboard
+ * still uses the default build command. OpenNext sets NEXT_PRIVATE_STANDALONE
+ * before re-invoking `npm run build` for the Next.js compile — detect that and
+ * only run Next so we do not recurse.
  */
 import { spawnSync } from "node:child_process";
 

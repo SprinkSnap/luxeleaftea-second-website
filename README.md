@@ -45,7 +45,7 @@ Open [http://localhost:3000](http://localhost:3000).
 ## Useful scripts
 
 - `npm run dev` — local development server
-- `npm run build` — Next.js production build **and** OpenNext Worker bundle (`.open-next/`)
+- `npm run build` — OpenNext Cloudflare build (`.open-next/`); safe for Workers Builds
 - `npm run start` — start production server (Node; local only)
 - `npm run lint` — ESLint
 - `npm run typecheck` — TypeScript check
@@ -81,17 +81,21 @@ Configuration lives in `wrangler.jsonc` (`nodejs_compat` is required) and `open-
 
 ### Deploying from Git (Cloudflare Workers Builds)
 
-`npm run build` runs `scripts/build.mjs`, which calls `opennextjs-cloudflare build` so the `.open-next/` Worker bundle exists before deploy. When OpenNext re-invokes the `build` script (with `NEXT_PRIVATE_STANDALONE=true`), the script only runs `prisma generate` + `next build` to avoid recursion.
+Set the Workers Builds **Build command** to:
 
-That matches the current Workers Builds settings:
+```bash
+npx opennextjs-cloudflare build
+```
 
-| Setting | Recommended value |
+That is the [OpenNext-recommended](https://opennext.js.org/cloudflare/howtos/dev-deploy) command. It invokes `npm run build` internally (with `NEXT_PRIVATE_STANDALONE`) to compile Next.js, then emits `.open-next/`.
+
+| Setting | Value |
 | --- | --- |
-| **Build command** | `npm run build` |
+| **Build command** | `npx opennextjs-cloudflare build` |
 | **Deploy command** (production) | `npx wrangler deploy` |
 | **Non-production deploy command** | `npx wrangler versions upload` |
 
-Prefer `npx opennextjs-cloudflare deploy` / `upload` if you want OpenNext to populate remote cache explicitly; Wrangler also detects an OpenNext project and forwards to those commands.
+`package.json` `"build"` is `scripts/build.mjs`: when OpenNext re-invokes it, it runs `prisma generate` + `next build` only; when called directly (e.g. if the dashboard still has `npm run build`), it runs `opennextjs-cloudflare build` so deploy still finds `.open-next/`.
 
 Also set the runtime secret `DATABASE_URL` (Neon pooled URL) on the Worker before expecting DB-backed routes to work.
 
