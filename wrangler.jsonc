@@ -21,7 +21,7 @@
   //
   // Non-secret vars can go in the Cloudflare dashboard or a "vars" block:
   // "vars": {
-  //   "NEXT_PUBLIC_SITE_URL": "https://your-worker.workers.dev",
+  //   "NEXT_PUBLIC_SITE_URL": "https://www.luxeleaftea.ca",
   //   "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY": "",
   //   "REORDER_NOTIFY_CHANNEL": "EMAIL"
   // }

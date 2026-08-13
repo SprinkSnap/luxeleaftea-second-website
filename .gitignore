@@ -62,3 +62,4 @@ next-env.d.ts
 *.webp
 !public/**/*.webp
 LUX_LEAF_TEA_VERIFICATION_REPORT.md
+.neon
