@@ -81,7 +81,9 @@ Configuration lives in `wrangler.jsonc` (`nodejs_compat` is required) and `open-
 
 ### Deploying from Git (Cloudflare Workers Builds)
 
-`npm run build` runs `next build` and then `opennextjs-cloudflare build --skipNextBuild`, so the `.open-next/` Worker bundle exists before deploy. That matches Workers Builds defaults:
+`npm run build` runs `scripts/build.mjs`, which calls `opennextjs-cloudflare build` so the `.open-next/` Worker bundle exists before deploy. When OpenNext re-invokes the `build` script (with `NEXT_PRIVATE_STANDALONE=true`), the script only runs `prisma generate` + `next build` to avoid recursion.
+
+That matches the current Workers Builds settings:
 
 | Setting | Recommended value |
 | --- | --- |
@@ -90,8 +92,6 @@ Configuration lives in `wrangler.jsonc` (`nodejs_compat` is required) and `open-
 | **Non-production deploy command** | `npx wrangler versions upload` |
 
 Prefer `npx opennextjs-cloudflare deploy` / `upload` if you want OpenNext to populate remote cache explicitly; Wrangler also detects an OpenNext project and forwards to those commands.
-
-`--skipNextBuild` avoids recursion when `opennextjs-cloudflare build` (used by `npm run deploy`) invokes the `build` script internally.
 
 Also set the runtime secret `DATABASE_URL` (Neon pooled URL) on the Worker before expecting DB-backed routes to work.
 
