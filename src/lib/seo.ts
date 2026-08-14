@@ -30,6 +30,7 @@ export function createMetadata({
   const pageTitle = cleanPageTitle(title);
   const url = absoluteUrl(path);
   const ogTitle = pageTitle;
+  const ogImage = absoluteUrl(image || siteConfig.ogImage);
 
   return {
     title: pageTitle,
@@ -42,15 +43,13 @@ export function createMetadata({
       siteName: siteConfig.name,
       locale: siteConfig.locale,
       type: "website",
-      ...(image
-        ? { images: [{ url: absoluteUrl(image), alt: pageTitle }] }
-        : {}),
+      images: [{ url: ogImage, width: 1200, height: 630, alt: pageTitle }],
     },
     twitter: {
       card: "summary_large_image",
       title: ogTitle,
       description,
-      ...(image ? { images: [absoluteUrl(image)] } : {}),
+      images: [ogImage],
     },
     // Search results: noindex,follow so crawlers can still see the directive
     robots: noIndex

@@ -25,6 +25,8 @@ export const siteConfig = {
   },
   /** Preferred future hero photography path (graceful fallback until supplied). */
   heroImage: "/images/brand/lux-leaf-premium-tea-hero.webp",
+  /** Static social share image (1200×630) — avoid next/og WASM in the Worker bundle. */
+  ogImage: "/images/brand/og-default.png",
   /** Only include real profiles — set via env when verified. */
   social: {
     ...(process.env.NEXT_PUBLIC_INSTAGRAM_URL
