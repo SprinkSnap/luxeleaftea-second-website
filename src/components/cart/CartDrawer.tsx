@@ -5,8 +5,15 @@ import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import { useCart } from "@/components/providers/CartProvider";
-import { siteConfig } from "@/lib/site";
+import {
+  freeShippingLabel,
+  hasSupportPhone,
+  mailtoHref,
+  siteConfig,
+  telHref,
+} from "@/lib/site";
 import { formatMoney } from "@/lib/utils";
+import { ecommerce } from "@/lib/analytics";
 
 export function CartDrawer() {
   const {
@@ -19,16 +26,28 @@ export function CartDrawer() {
     checkoutLabel,
   } = useCart();
   const panelRef = useRef<HTMLDivElement>(null);
+  const trackedOpen = useRef(false);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      trackedOpen.current = false;
+      return;
+    }
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") closeCart();
     };
     window.addEventListener("keydown", onKey);
     panelRef.current?.focus();
+    if (!trackedOpen.current) {
+      ecommerce.viewCart({
+        currency: siteConfig.currency,
+        value: subtotal / 100,
+        item_count: items.length,
+      });
+      trackedOpen.current = true;
+    }
     return () => window.removeEventListener("keydown", onKey);
-  }, [isOpen, closeCart]);
+  }, [isOpen, closeCart, subtotal, items.length]);
 
   if (!isOpen) return null;
 
@@ -56,7 +75,7 @@ export function CartDrawer() {
           <button
             type="button"
             onClick={closeCart}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-md"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-md"
             aria-label="Close cart"
           >
             <X className="h-5 w-5" />
@@ -67,7 +86,7 @@ export function CartDrawer() {
           <p className="text-sm text-brand-muted">
             {remaining === 0
               ? "You’ve unlocked free shipping."
-              : `${formatMoney(remaining)} away from free shipping`}
+              : `${formatMoney(remaining)} more for free shipping`}
           </p>
           <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-brand-mist">
             <div
@@ -75,6 +94,9 @@ export function CartDrawer() {
               style={{ width: `${progress * 100}%` }}
             />
           </div>
+          <p className="mt-1.5 text-[11px] text-brand-muted">
+            {freeShippingLabel()}
+          </p>
         </div>
 
         <div className="flex-1 overflow-y-auto px-5 py-4">
@@ -126,7 +148,7 @@ export function CartDrawer() {
                         onChange={(e) =>
                           updateQuantity(item.id, Number(e.target.value))
                         }
-                        className="h-9 rounded border border-[var(--brand-line)] px-2 text-sm"
+                        className="h-11 min-w-[3.5rem] rounded border border-[var(--brand-line)] px-2 text-sm"
                       >
                         {Array.from({
                           length: Math.max(item.stockAvailable, item.quantity),
@@ -138,7 +160,7 @@ export function CartDrawer() {
                       </select>
                       <button
                         type="button"
-                        className="text-sm text-brand-muted underline"
+                        className="min-h-11 px-2 text-sm text-brand-muted underline"
                         onClick={() => removeItem(item.id)}
                       >
                         Remove
@@ -152,29 +174,18 @@ export function CartDrawer() {
               ))}
             </ul>
           )}
-
-          {items.length > 0 && (
-            <div className="mt-8 rounded-[var(--radius-md)] bg-brand-mist/70 p-4">
-              <p className="text-xs tracking-[0.14em] uppercase text-brand-muted">
-                You may also like
-              </p>
-              <Link
-                href="/collections/gifts"
-                onClick={closeCart}
-                className="mt-2 block text-sm text-brand-forest underline-offset-2 hover:underline"
-              >
-                Pair with a gift box or tea infuser →
-              </Link>
-            </div>
-          )}
         </div>
 
         {items.length > 0 && (
-          <div className="border-t border-[var(--brand-line)] p-5">
-            <div className="mb-3 flex justify-between text-sm">
+          <div className="border-t border-[var(--brand-line)] p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+            <div className="mb-1 flex justify-between text-sm">
               <span>Subtotal</span>
               <span className="font-medium">{formatMoney(subtotal)}</span>
             </div>
+            <p className="mb-3 text-xs text-brand-muted">
+              Shipping and tax calculated at checkout · Prices in{" "}
+              {siteConfig.currency}
+            </p>
             <Link
               href="/checkout"
               onClick={closeCart}
@@ -182,8 +193,30 @@ export function CartDrawer() {
             >
               {checkoutLabel}
             </Link>
-            <p className="mt-2 text-center text-xs text-brand-muted">
-              Taxes and shipping calculated at checkout
+            <Link
+              href="/shop"
+              onClick={closeCart}
+              className="mt-3 flex h-11 items-center justify-center text-sm font-medium text-brand-forest underline-offset-2 hover:underline"
+            >
+              Continue Shopping
+            </Link>
+            <p className="mt-3 text-center text-xs text-brand-muted">
+              Need help?{" "}
+              <Link href="/contact" onClick={closeCart} className="underline">
+                Contact
+              </Link>
+              {hasSupportPhone() && (
+                <>
+                  {" · "}
+                  <a href={telHref()} className="underline">
+                    Call
+                  </a>
+                </>
+              )}
+              {" · "}
+              <a href={mailtoHref("Cart help")} className="underline">
+                Email
+              </a>
             </p>
           </div>
         )}

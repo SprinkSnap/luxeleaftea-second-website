@@ -4,10 +4,11 @@ import { CartDrawer } from "@/components/cart/CartDrawer";
 import { AIChat } from "@/components/chat/AIChat";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
+import { HelpFab } from "@/components/layout/HelpFab";
 import { AnalyticsClickCapture } from "@/components/analytics/AnalyticsClickCapture";
 import { CartProvider } from "@/components/providers/CartProvider";
 import { organizationJsonLd, websiteJsonLd } from "@/lib/seo";
-import { siteConfig } from "@/lib/site";
+import { freeShippingLabel, siteConfig } from "@/lib/site";
 import "./globals.css";
 
 const display = Cormorant_Garamond({
@@ -60,7 +61,11 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const htmlLang = siteConfig.locale.replace("_", "-");
   return (
     <html lang={htmlLang} className={`${display.variable} ${body.variable} h-full`}>
@@ -76,12 +81,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         />
         <CartProvider>
           <AnalyticsClickCapture />
-          <Header />
+          <Header announcement={freeShippingLabel()} />
           <main id="main" className="flex-1">
             {children}
           </main>
           <Footer />
           <CartDrawer />
+          <HelpFab />
           <AIChat />
         </CartProvider>
       </body>

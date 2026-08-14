@@ -697,7 +697,7 @@ async function main() {
     data: [
       { key: "free_shipping_threshold", value: "5000" },
       { key: "announcement_bar", value: "Free shipping on orders $50+" },
-      { key: "store_currency", value: "USD" },
+      { key: "store_currency", value: "CAD" },
       { key: "support_email", value: "hello@luxleaftea.com" },
     ],
   });

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { productCardInclude, serializeProductCard } from "@/lib/products";
 import { recommendFromQuiz, type QuizAnswers } from "@/lib/quiz";
+import { siteConfig } from "@/lib/site";
 
 export type ChatTurn = { role: "user" | "assistant"; content: string };
 
@@ -67,7 +68,9 @@ export async function answerShoppingAssistant(message: string) {
   if (lower.includes("shipping")) {
     return {
       reply:
-        "Orders of $50 or more ship free within the contiguous United States. Delivery estimates appear at checkout once your address is entered. I can only share shipping details from our published policy — ask our team at hello@luxleaftea.com for exceptions.",
+        siteConfig.market === "CA"
+          ? `Orders of $${(siteConfig.freeShippingThreshold / 100).toFixed(0)} or more ship free within Canada (prices in ${siteConfig.currency}). Delivery estimates appear at checkout once your address is entered. I can only share shipping details from our published policy — ask our team at ${siteConfig.supportEmail} for exceptions.`
+          : `Orders of $${(siteConfig.freeShippingThreshold / 100).toFixed(0)} or more may qualify for free shipping. Delivery estimates appear at checkout. Ask our team at ${siteConfig.supportEmail} for exceptions.`,
       products: [],
     };
   }

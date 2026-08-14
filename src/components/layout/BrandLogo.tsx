@@ -12,9 +12,9 @@ type BrandLogoProps = {
 
 /**
  * Responsive Lux Leaf Tea logo (source-of-truth assets).
- * Target visual widths: mobile 130–155 · tablet 150–180 · desktop 180–220.
+ * Target visual widths: mobile 155–180 · tablet 180–205 · desktop 210–250.
  * Aspect ratio preserved (1200×791). Assets include a dark plate — on the ivory
- * header that plate reads as a premium brand badge.
+ * header that plate reads as a premium brand badge. Do not stretch or crop.
  */
 export function BrandLogo({
   compact = false,
@@ -36,8 +36,10 @@ export function BrandLogo({
           "relative block overflow-hidden transition-[width,height] duration-300 ease-out motion-reduce:transition-none",
           onDark && "rounded-sm",
           compact
-            ? "h-[2.75rem] w-[7.5rem] sm:h-12 sm:w-[8.5rem] lg:h-[3.25rem] lg:w-[10rem]"
-            : "h-12 w-[8.5rem] sm:h-[3.35rem] sm:w-[10rem] md:h-14 md:w-[11rem] lg:h-[3.75rem] lg:w-[13rem]",
+            ? // Compact scroll state — still prominent, avoids header jump
+              "h-[3.1rem] w-[9.75rem] sm:h-[3.35rem] sm:w-[11rem] md:h-14 md:w-[12rem] lg:h-[3.65rem] lg:w-[13.5rem]"
+            : // Default: mobile ~156px, tablet ~192px, desktop ~220–240px
+              "h-[3.35rem] w-[9.75rem] xs:w-[10.5rem] sm:h-[3.6rem] sm:w-[11.5rem] md:h-[3.85rem] md:w-[12.75rem] lg:h-[4.15rem] lg:w-[14rem] xl:h-[4.35rem] xl:w-[15rem]",
         )}
       >
         <picture>

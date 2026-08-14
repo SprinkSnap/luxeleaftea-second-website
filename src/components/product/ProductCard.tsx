@@ -62,6 +62,7 @@ export function ProductCard({
             item_name: product.name,
             item_list_name: listName,
             price: product.price / 100,
+            currency: process.env.NEXT_PUBLIC_CURRENCY || "CAD",
           })
         }
       >
@@ -115,7 +116,7 @@ export function ProductCard({
             lowStock={product.lowStock}
           />
         </div>
-        <div className="mt-auto pt-4">
+        <div className="mt-auto space-y-2 pt-4">
           {product.stockAvailable > 0 ? (
             <button
               type="button"
@@ -134,6 +135,12 @@ export function ProductCard({
               Notify Me When Available
             </Link>
           )}
+          <Link
+            href={`/products/${product.slug}`}
+            className="flex h-10 w-full items-center justify-center text-sm font-medium text-brand-forest underline-offset-2 hover:underline"
+          >
+            View details
+          </Link>
         </div>
         {error && (
           <p className="mt-2 text-sm text-red-700" role="alert">

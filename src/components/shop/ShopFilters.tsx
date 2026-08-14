@@ -95,6 +95,32 @@ export function ShopFilters() {
           </select>
         </label>
         <label className="text-sm">
+          <span className="mb-1 block text-brand-muted">Flavour</span>
+          <select
+            className="h-11 w-full rounded-md border border-[var(--brand-line)] bg-white px-3"
+            value={params.get("flavour") || "all"}
+            onChange={(e) => update("flavour", e.target.value)}
+          >
+            <option value="all">All</option>
+            {[
+              "Floral",
+              "Fruity",
+              "Citrus",
+              "Earthy",
+              "Roasted",
+              "Malty",
+              "Sweet",
+              "Fresh",
+              "Smoky",
+              "Spiced",
+            ].map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="text-sm">
           <span className="mb-1 block text-brand-muted">Origin</span>
           <select
             className="h-11 w-full rounded-md border border-[var(--brand-line)] bg-white px-3"

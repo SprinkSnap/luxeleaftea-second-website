@@ -48,7 +48,9 @@ export async function getOrCreateCart() {
   }
 
   const cart = await prisma.cart.create({
-    data: {},
+    data: {
+      currency: process.env.NEXT_PUBLIC_CURRENCY || "CAD",
+    },
     include: cartInclude,
   });
 

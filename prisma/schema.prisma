@@ -440,7 +440,7 @@ model Cart {
   id        String     @id @default(cuid())
   customerId String?
   sessionId String?    @unique
-  currency  String     @default("USD")
+  currency  String     @default("CAD")
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
   customer  Customer?  @relation(fields: [customerId], references: [id])
@@ -468,7 +468,7 @@ model Order {
   customerId        String?
   email             String
   status            OrderStatus    @default(PENDING)
-  currency          String         @default("USD")
+  currency          String         @default("CAD")
   subtotal          Int
   shippingCost      Int            @default(0)
   taxAmount         Int            @default(0)
