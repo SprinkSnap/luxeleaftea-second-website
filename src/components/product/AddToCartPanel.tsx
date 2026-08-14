@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useCart } from "@/components/providers/CartProvider";
 import { StockIndicator } from "@/components/product/StockIndicator";
 import { formatMoney } from "@/lib/utils";
@@ -12,6 +13,7 @@ export function AddToCartPanel({
   stockAvailable,
   lowStock,
   sizes,
+  cupsEstimate,
 }: {
   variantId: string;
   price: number;
@@ -19,11 +21,13 @@ export function AddToCartPanel({
   stockAvailable: number;
   lowStock: boolean;
   sizes: { id: string; label: string; price: number; stock: number }[];
+  cupsEstimate?: number | null;
 }) {
   const { addItem } = useCart();
   const [selected, setSelected] = useState(variantId);
   const [qty, setQty] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [added, setAdded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [notifyDone, setNotifyDone] = useState(false);
@@ -37,6 +41,8 @@ export function AddToCartPanel({
     setError(null);
     try {
       await addItem(current.id, qty);
+      setAdded(true);
+      window.setTimeout(() => setAdded(false), 2000);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not add to cart");
     } finally {
@@ -54,6 +60,12 @@ export function AddToCartPanel({
     if (res.ok) setNotifyDone(true);
   }
 
+  const ctaLabel = loading
+    ? "Adding…"
+    : added
+      ? "Added to cart"
+      : `Add to Cart — ${formatMoney(current?.price ?? price)}`;
+
   return (
     <>
       <div className="space-y-5">
@@ -62,14 +74,15 @@ export function AddToCartPanel({
             {formatMoney(current?.price ?? price)}
           </p>
           <p className="mt-1 text-sm text-brand-muted">
-            Size: {current?.label || packageSize}
+            {current?.label || packageSize}
+            {cupsEstimate ? ` · ~${cupsEstimate} cups` : ""}
           </p>
         </div>
 
         {sizes.length > 1 && (
           <div>
-            <p className="mb-2 text-sm font-medium">Size</p>
-            <div className="flex flex-wrap gap-2">
+            <p className="mb-2 text-sm font-medium">Package size</p>
+            <div className="flex flex-wrap gap-2" role="group" aria-label="Package size">
               {sizes.map((size) => (
                 <button
                   key={size.id}
@@ -112,8 +125,9 @@ export function AddToCartPanel({
               onClick={onAdd}
               disabled={loading}
               className="h-12 flex-1 rounded-[var(--radius-md)] bg-cta text-sm font-semibold tracking-[0.04em] text-[var(--cta-text)] hover:bg-cta-hover"
+              aria-live="polite"
             >
-              {loading ? "Adding…" : "Add to Cart"}
+              {loading ? "Adding…" : added ? "Added to cart" : "Add to Cart"}
             </button>
           </div>
         ) : (
@@ -147,21 +161,27 @@ export function AddToCartPanel({
             {error}
           </p>
         )}
-        <p className="text-xs text-brand-muted">
-          Secure checkout · Guest checkout welcome · Free shipping over $50
-        </p>
+        <ul className="space-y-1.5 text-xs text-brand-muted">
+          <li>Free shipping on orders over $50</li>
+          <li>Secure checkout · Guest checkout welcome</li>
+          <li>
+            <Link href="/returns" className="underline-offset-2 hover:underline">
+              Returns &amp; exchanges
+            </Link>
+          </li>
+        </ul>
       </div>
 
-      {/* Mobile sticky CTA */}
       {available > 0 && (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--brand-line)] bg-white/95 p-3 backdrop-blur md:hidden">
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--brand-line)] bg-white/95 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur md:hidden">
           <button
             type="button"
             onClick={onAdd}
             disabled={loading}
             className="h-12 w-full rounded-[var(--radius-md)] bg-cta text-sm font-semibold text-[var(--cta-text)]"
+            aria-live="polite"
           >
-            Add to Cart — {formatMoney(current?.price ?? price)}
+            {ctaLabel}
           </button>
         </div>
       )}

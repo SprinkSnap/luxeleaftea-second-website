@@ -5,15 +5,63 @@ import { AddToCartPanel } from "@/components/product/AddToCartPanel";
 import { BrewingGuide } from "@/components/product/BrewingGuide";
 import { TeaProfile } from "@/components/product/TeaProfile";
 import { Badge } from "@/components/product/Badge";
+import { ProductGrid } from "@/components/product/ProductGrid";
 import {
   breadcrumbJsonLd,
   createMetadata,
   productJsonLd,
 } from "@/lib/seo";
-import { getProductBySlug } from "@/lib/products";
+import {
+  getProductBySlug,
+  getReviewSummary,
+  productCardInclude,
+  serializeProductCard,
+} from "@/lib/products";
+import { prisma } from "@/lib/prisma";
 import { parseJsonArray, stockAvailable } from "@/lib/utils";
 
 type Props = { params: Promise<{ slug: string }> };
+
+const collectionByTeaType: Record<string, string> = {
+  Green: "green-tea",
+  Black: "black-tea",
+  Oolong: "oolong",
+  White: "white-tea",
+  Herbal: "herbal",
+  "Pu-erh": "pu-erh",
+  Matcha: "matcha",
+};
+
+const guideByTeaType: Record<string, { href: string; label: string }> = {
+  Green: {
+    href: "/tea-guide/green-tea-brewing-temperature-guide",
+    label: "Green tea brewing guide",
+  },
+  Black: {
+    href: "/tea-guide/black-tea-vs-green-tea",
+    label: "Black tea vs green tea",
+  },
+  Oolong: {
+    href: "/tea-guide/what-is-oolong-tea",
+    label: "What is oolong tea?",
+  },
+  White: {
+    href: "/tea-guide/how-to-brew-loose-leaf-tea",
+    label: "How to brew loose leaf tea",
+  },
+  Herbal: {
+    href: "/tea-guide/how-to-brew-loose-leaf-tea",
+    label: "How to brew loose leaf tea",
+  },
+  "Pu-erh": {
+    href: "/tea-guide/how-to-brew-loose-leaf-tea",
+    label: "How to brew loose leaf tea",
+  },
+  Matcha: {
+    href: "/tea-guide/beginners-guide-to-premium-tea",
+    label: "Beginner’s guide to premium tea",
+  },
+};
 
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
@@ -34,11 +82,15 @@ export default async function ProductPage({ params }: Props) {
 
   const images = parseJsonArray(product.images);
   const flavourNotes = parseJsonArray(product.flavourNotes);
-  const variant = product.variants.find((v) => v.isDefault) || product.variants[0];
+  const variant =
+    product.variants.find((v) => v.isDefault) || product.variants[0];
   if (!variant) notFound();
 
   const available = variant.inventory
-    ? stockAvailable(variant.inventory.stockOnHand, variant.inventory.stockReserved)
+    ? stockAvailable(
+        variant.inventory.stockOnHand,
+        variant.inventory.stockReserved,
+      )
     : 0;
   const lowStock = variant.inventory
     ? available > 0 && available <= variant.inventory.reorderPoint
@@ -53,6 +105,21 @@ export default async function ProductPage({ params }: Props) {
       : 0,
   }));
 
+  const reviewSummary = getReviewSummary(product);
+  const approvedReviews = product.reviews;
+
+  const relatedRaw = await prisma.product.findMany({
+    where: {
+      published: true,
+      teaType: product.teaType,
+      NOT: { id: product.id },
+    },
+    include: productCardInclude,
+    take: 4,
+    orderBy: [{ isBestSeller: "desc" }, { updatedAt: "desc" }],
+  });
+  const related = relatedRaw.map(serializeProductCard);
+
   const jsonLd = productJsonLd({
     name: product.name,
     description: product.shortDescription,
@@ -61,6 +128,32 @@ export default async function ProductPage({ params }: Props) {
     sku: variant.sku,
     price: variant.retailPrice,
     availability: available > 0 ? "InStock" : "OutOfStock",
+    offers: product.variants.map((v) => {
+      const stock = v.inventory
+        ? stockAvailable(v.inventory.stockOnHand, v.inventory.stockReserved)
+        : 0;
+      return {
+        sku: v.sku,
+        url: `/products/${product.slug}`,
+        price: v.retailPrice,
+        availability: (stock > 0 ? "InStock" : "OutOfStock") as
+          | "InStock"
+          | "OutOfStock",
+        packageSize: v.packageSize,
+      };
+    }),
+    aggregateRating: reviewSummary
+      ? {
+          ratingValue: reviewSummary.average,
+          reviewCount: reviewSummary.count,
+        }
+      : null,
+    reviews: approvedReviews.slice(0, 10).map((r) => ({
+      authorName: r.authorName,
+      rating: r.rating,
+      body: r.body,
+      datePublished: r.createdAt?.toISOString?.() ?? undefined,
+    })),
   });
 
   const crumbs = breadcrumbJsonLd([
@@ -68,6 +161,14 @@ export default async function ProductPage({ params }: Props) {
     { name: "Shop", path: "/shop" },
     { name: product.name, path: `/products/${product.slug}` },
   ]);
+
+  const guide = guideByTeaType[product.teaType];
+  const badges = [
+    product.isBestSeller ? "Best Seller" : null,
+    product.isLimited ? "Limited Harvest" : null,
+    product.isNew ? "New" : null,
+    product.isStaffPick ? "Staff Pick" : null,
+  ].filter(Boolean) as string[];
 
   return (
     <div className="container-wide px-4 py-8 md:py-12">
@@ -102,19 +203,32 @@ export default async function ProductPage({ params }: Props) {
         </div>
 
         <div className="lg:sticky lg:top-36 lg:self-start">
-          <div className="flex flex-wrap gap-2">
-            {product.isBestSeller && <Badge label="Best Seller" />}
-            {product.isStaffPick && <Badge label="Staff Pick" />}
-            {product.isNew && <Badge label="New" />}
-            {product.isLimited && <Badge label="Limited Harvest" />}
-          </div>
+          {badges.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {badges.slice(0, 2).map((label) => (
+                <Badge key={label} label={label} />
+              ))}
+            </div>
+          )}
           <p className="mt-4 text-xs tracking-[0.16em] uppercase text-brand-muted">
-            {product.teaType} · {product.origin}
+            {product.teaType}
+            {product.origin ? ` · ${product.origin}` : ""}
           </p>
           <h1 className="mt-2 font-display text-4xl text-brand-forest-deep md:text-5xl">
             {product.name}
           </h1>
-          <p className="mt-3 text-lg text-brand-muted">{product.shortDescription}</p>
+          <p className="mt-3 text-lg text-brand-muted">
+            {product.shortDescription}
+          </p>
+          {reviewSummary && (
+            <p className="mt-3 text-sm text-brand-ink">
+              ★ {reviewSummary.average.toFixed(1)}{" "}
+              <span className="text-brand-muted">
+                ({reviewSummary.count} review
+                {reviewSummary.count === 1 ? "" : "s"})
+              </span>
+            </p>
+          )}
           <div className="mt-8">
             <AddToCartPanel
               variantId={variant.id}
@@ -123,49 +237,53 @@ export default async function ProductPage({ params }: Props) {
               stockAvailable={available}
               lowStock={lowStock}
               sizes={sizes}
+              cupsEstimate={product.cupsEstimate}
             />
           </div>
         </div>
       </div>
 
-      <div className="mt-16 grid gap-12 lg:grid-cols-2">
-        <TeaProfile
-          aroma={product.aromaScore}
-          body={product.bodyScore}
-          sweetness={product.sweetnessScore}
-          roast={product.roastScore}
-          caffeine={product.caffeineScore}
-          flavourNotes={flavourNotes}
-        />
-        <BrewingGuide
-          amount={product.brewingAmount}
-          tempC={product.waterTempC}
-          steepSeconds={product.steepTimeSeconds}
-          infusions={product.infusions}
-        />
-      </div>
+      <section className="mt-16">
+        <h2 className="font-display text-2xl md:text-3xl">Flavour profile</h2>
+        <div className="mt-6">
+          <TeaProfile
+            aroma={product.aromaScore}
+            body={product.bodyScore}
+            sweetness={product.sweetnessScore}
+            roast={product.roastScore}
+            caffeine={product.caffeineScore}
+            flavourNotes={flavourNotes}
+          />
+        </div>
+      </section>
 
-      <section className="mt-16 grid gap-8 md:grid-cols-2">
+      <section className="mt-16 grid gap-10 lg:grid-cols-2">
         <div>
-          <h2 className="font-display text-2xl">Tea Information</h2>
+          <h2 className="font-display text-2xl md:text-3xl">
+            Why this tea is special
+          </h2>
+          <div className="prose-tea mt-4">
+            <p>{product.description}</p>
+          </div>
+        </div>
+        <div>
+          <h2 className="font-display text-2xl md:text-3xl">
+            Origin &amp; harvest
+          </h2>
           <dl className="mt-4 space-y-3 text-sm">
             {[
-              ["Tea type", product.teaType],
               ["Origin", product.origin],
               ["Region", product.region],
               ["Harvest", product.harvest],
               ["Cultivar", product.cultivar],
               ["Processing", product.processingMethod],
-              ["Ingredients", product.ingredients],
-              ["Caffeine", product.caffeineLevel],
               ["Leaf appearance", product.leafAppearance],
-              ["Time of day", product.timeOfDay],
-              ["Package", variant.packageSize],
-              ["Estimated cups", product.cupsEstimate ? `~${product.cupsEstimate}` : null],
-              ["Storage", product.storageInstructions],
             ].map(([label, value]) =>
               value ? (
-                <div key={String(label)} className="grid grid-cols-[9rem_1fr] gap-3 border-b border-[var(--brand-line)] pb-2">
+                <div
+                  key={String(label)}
+                  className="grid grid-cols-[9rem_1fr] gap-3 border-b border-[var(--brand-line)] pb-2"
+                >
                   <dt className="text-brand-muted">{label}</dt>
                   <dd>{value}</dd>
                 </div>
@@ -173,26 +291,70 @@ export default async function ProductPage({ params }: Props) {
             )}
           </dl>
         </div>
+      </section>
+
+      <section className="mt-16 grid gap-10 lg:grid-cols-2">
         <div>
-          <h2 className="font-display text-2xl">About this tea</h2>
-          <div className="prose-tea mt-4">
-            <p>{product.description}</p>
+          <h2 className="font-display text-2xl md:text-3xl">
+            Brewing instructions
+          </h2>
+          <div className="mt-6">
+            <BrewingGuide
+              amount={product.brewingAmount}
+              tempC={product.waterTempC}
+              steepSeconds={product.steepTimeSeconds}
+              infusions={product.infusions}
+            />
           </div>
-          <div className="mt-8 rounded-[var(--radius-md)] bg-brand-mist/80 p-5 text-sm text-brand-muted">
-            <p className="font-medium text-brand-forest">Why it’s worth it</p>
-            <p className="mt-2">
-              Whole-leaf quality, transparent origin details, and brewing guidance
-              designed for an elevated cup without requiring expertise.
+          {guide && (
+            <p className="mt-4 text-sm text-brand-muted">
+              Want more detail?{" "}
+              <Link
+                href={guide.href}
+                className="font-medium text-brand-forest underline-offset-2 hover:underline"
+              >
+                {guide.label}
+              </Link>
             </p>
-          </div>
+          )}
+        </div>
+        <div>
+          <h2 className="font-display text-2xl md:text-3xl">
+            Ingredients &amp; caffeine
+          </h2>
+          <dl className="mt-4 space-y-3 text-sm">
+            {[
+              ["Ingredients", product.ingredients],
+              ["Caffeine", product.caffeineLevel],
+              ["Strength", product.strength],
+              ["Best time", product.timeOfDay],
+              [
+                "Estimated cups",
+                product.cupsEstimate ? `~${product.cupsEstimate}` : null,
+              ],
+              ["Storage", product.storageInstructions],
+            ].map(([label, value]) =>
+              value ? (
+                <div
+                  key={String(label)}
+                  className="grid grid-cols-[9rem_1fr] gap-3 border-b border-[var(--brand-line)] pb-2"
+                >
+                  <dt className="text-brand-muted">{label}</dt>
+                  <dd>{value}</dd>
+                </div>
+              ) : null,
+            )}
+          </dl>
         </div>
       </section>
 
-      {product.reviews.length > 0 && (
+      {approvedReviews.length > 0 && (
         <section className="mt-16">
-          <h2 className="font-display text-2xl">Customer Reviews</h2>
+          <h2 className="font-display text-2xl md:text-3xl">
+            Customer reviews
+          </h2>
           <ul className="mt-6 space-y-4">
-            {product.reviews.map((review) => (
+            {approvedReviews.map((review) => (
               <li
                 key={review.id}
                 className="rounded-[var(--radius-md)] border border-[var(--brand-line)] bg-white/70 p-4"
@@ -201,7 +363,9 @@ export default async function ProductPage({ params }: Props) {
                   {"★".repeat(review.rating)}
                   {"☆".repeat(5 - review.rating)}
                   {review.verifiedPurchase && (
-                    <span className="ml-2 text-brand-muted">Verified purchase</span>
+                    <span className="ml-2 text-brand-muted">
+                      Verified purchase
+                    </span>
                   )}
                 </p>
                 <p className="mt-2 font-medium">{review.authorName}</p>
@@ -209,6 +373,23 @@ export default async function ProductPage({ params }: Props) {
               </li>
             ))}
           </ul>
+        </section>
+      )}
+
+      {related.length > 0 && (
+        <section className="mt-16">
+          <div className="mb-6 flex items-end justify-between gap-4">
+            <h2 className="font-display text-2xl md:text-3xl">
+              You may also like
+            </h2>
+            <Link
+              href={`/collections/${collectionByTeaType[product.teaType] || "best-sellers"}`}
+              className="text-sm font-medium text-brand-forest underline-offset-4 hover:underline"
+            >
+              More {product.teaType}
+            </Link>
+          </div>
+          <ProductGrid products={related} />
         </section>
       )}
       <div className="h-20 md:hidden" aria-hidden />

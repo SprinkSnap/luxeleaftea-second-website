@@ -5,6 +5,9 @@ import { siteConfig } from "@/lib/site";
 // Queries the database, so render at request time rather than at build time.
 export const dynamic = "force-dynamic";
 
+/** Stable date for evergreen marketing routes — do not stamp “now” on every request. */
+const STATIC_LAST_MODIFIED = new Date("2026-08-01T00:00:00.000Z");
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = siteConfig.url.replace(/\/$/, "");
   const [products, collections, articles] = await Promise.all([
@@ -35,10 +38,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/returns",
     "/privacy",
     "/terms",
-    "/search",
   ].map((path) => ({
     url: `${base}${path || "/"}`,
-    lastModified: new Date(),
+    lastModified: STATIC_LAST_MODIFIED,
     changeFrequency: "weekly" as const,
     priority: path === "" ? 1 : 0.7,
   }));

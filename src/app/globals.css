@@ -1,40 +1,41 @@
 @import "tailwindcss";
 
 :root {
-  /* Brand system derived from Lux Leaf logo */
+  /* Premium boutique palette — forest, ivory, restrained gold */
   --brand-forest: #1b3a2f;
   --brand-forest-deep: #12261f;
-  --brand-gold: #c4a35a;
-  --brand-gold-bright: #d4b56a;
+  --brand-gold: #b8923f;
+  --brand-gold-bright: #c9a54e;
   --brand-leaf: #5f8f4c;
   --brand-amber: #c8923a;
   --brand-black: #0b0d0c;
   --brand-charcoal: #1a1d1b;
-  --brand-ink: #142019;
-  --brand-cream: #f3f1ea;
-  --brand-mist: #eef2ef;
-  --brand-stone: #f7f8f6;
-  --brand-muted: #5c685f;
+  --brand-ink: #1a241e;
+  --brand-cream: #f8f5ee;
+  --brand-parchment: #efe8da;
+  --brand-mist: #f3efe6;
+  --brand-stone: #f8f5ee;
+  --brand-muted: #5a655e;
   --brand-line: rgba(27, 58, 47, 0.12);
 
-  --background: var(--brand-stone);
+  --background: var(--brand-cream);
   --foreground: var(--brand-ink);
-  --surface: #ffffff;
+  --surface: #fffcf7;
   --surface-muted: var(--brand-mist);
   --cta: #9a6b1f;
-  --cta-hover: #825912;
+  --cta-hover: #7f5616;
   --cta-text: #fffdf8;
-  --header-bg: #0b0d0c;
-  --header-fg: #f4f1e8;
-  --focus: #c4a35a;
+  --header-bg: #f8f5ee;
+  --header-fg: #1a241e;
+  --focus: #1b3a2f;
 
   --radius-sm: 0.375rem;
-  --radius-md: 0.625rem;
-  --radius-lg: 1rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.875rem;
 
-  --header-height: 5.5rem;
-  --header-height-compact: 4.25rem;
-  --announcement-height: 2.25rem;
+  --header-height: 4.5rem;
+  --header-height-compact: 3.75rem;
+  --announcement-height: 2rem;
 }
 
 @theme inline {
@@ -48,6 +49,8 @@
   --color-brand-black: var(--brand-black);
   --color-brand-ink: var(--brand-ink);
   --color-brand-mist: var(--brand-mist);
+  --color-brand-cream: var(--brand-cream);
+  --color-brand-parchment: var(--brand-parchment);
   --color-brand-stone: var(--brand-stone);
   --color-brand-muted: var(--brand-muted);
   --color-surface: var(--surface);
@@ -74,12 +77,10 @@ html {
 }
 
 body {
-  background:
-    radial-gradient(1200px 600px at 10% -10%, rgba(196, 163, 90, 0.08), transparent 55%),
-    radial-gradient(900px 500px at 90% 0%, rgba(95, 143, 76, 0.06), transparent 50%),
-    linear-gradient(180deg, #f7f8f6 0%, #f3f5f2 40%, #f7f8f6 100%);
+  background: var(--brand-cream);
   color: var(--foreground);
   font-family: var(--font-body), "Segoe UI", sans-serif;
+  font-weight: 400;
   text-rendering: optimizeLegibility;
 }
 
@@ -90,6 +91,7 @@ h3,
   font-family: var(--font-display), Georgia, "Times New Roman", serif;
   letter-spacing: -0.02em;
   color: var(--brand-forest-deep);
+  font-weight: 500;
 }
 
 a {
@@ -104,7 +106,7 @@ a {
 }
 
 ::selection {
-  background: rgba(196, 163, 90, 0.35);
+  background: rgba(184, 146, 63, 0.28);
   color: var(--brand-ink);
 }
 
@@ -129,20 +131,14 @@ a {
 }
 
 .container-wide {
-  width: min(1280px, calc(100% - 2rem));
+  width: min(1200px, calc(100% - 2rem));
   margin-inline: auto;
-}
-
-.texture-leaf {
-  background-image:
-    radial-gradient(rgba(27, 58, 47, 0.04) 0.7px, transparent 0.7px);
-  background-size: 18px 18px;
 }
 
 @keyframes fade-up {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
@@ -156,16 +152,16 @@ a {
     transform: scale(1);
   }
   50% {
-    transform: scale(1.06);
+    transform: scale(1.05);
   }
 }
 
 .animate-fade-up {
-  animation: fade-up 0.7s ease both;
+  animation: fade-up 0.65s ease both;
 }
 
 .animate-fade-up-delay {
-  animation: fade-up 0.8s ease 0.12s both;
+  animation: fade-up 0.75s ease 0.08s both;
 }
 
 .cart-badge-pop {
@@ -193,4 +189,19 @@ a {
 .prose-tea p {
   margin-bottom: 1rem;
   color: var(--brand-muted);
+}
+
+.editorial-frame {
+  background:
+    linear-gradient(160deg, #efe8da 0%, #e7dfcf 45%, #d9d0bc 100%);
+  border: 1px solid var(--brand-line);
+}
+
+.trust-strip {
+  background: var(--brand-forest);
+  color: #f4f1e8;
+}
+
+.section-soft {
+  background: color-mix(in srgb, var(--brand-parchment) 55%, white);
 }

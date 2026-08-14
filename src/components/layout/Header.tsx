@@ -6,7 +6,7 @@ import { Menu, Search, ShoppingBag, User, X } from "lucide-react";
 import { BrandLogo } from "@/components/layout/BrandLogo";
 import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
 import { useCart } from "@/components/providers/CartProvider";
-import { categoryNav, mobileQuickNav, primaryNav } from "@/lib/site";
+import { categoryNav, primaryNav } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
 export function Header({ announcement }: { announcement?: string }) {
@@ -45,21 +45,21 @@ export function Header({ announcement }: { announcement?: string }) {
       <AnnouncementBar message={announcement} />
       <div
         className={cn(
-          "sticky-header border-b border-white/10 bg-[var(--header-bg)] text-[var(--header-fg)]",
-          compact && "shadow-[0_10px_30px_rgba(0,0,0,0.28)]",
+          "sticky-header border-b border-[var(--brand-line)] bg-[var(--header-bg)]/95 text-[var(--header-fg)] backdrop-blur-md",
+          compact && "shadow-[0_8px_24px_rgba(18,38,31,0.06)]",
         )}
       >
         <div
           className={cn(
-            "container-wide grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 transition-[min-height] duration-300 motion-reduce:transition-none",
-            compact ? "min-h-16" : "min-h-[4.75rem] lg:min-h-[5.5rem]",
+            "container-wide grid grid-cols-[auto_1fr_auto] items-center gap-2 px-4 transition-[min-height] duration-300 motion-reduce:transition-none lg:grid-cols-[1fr_auto_1fr]",
+            compact ? "min-h-14" : "min-h-[3.75rem] md:min-h-16 lg:min-h-[4.5rem]",
           )}
         >
-          {/* Left: menu / desktop nav */}
-          <div className="flex items-center gap-2 justify-self-start">
+          {/* Left: hamburger / desktop nav */}
+          <div className="flex items-center justify-self-start">
             <button
               type="button"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-md text-[var(--header-fg)] lg:hidden"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-md text-brand-forest lg:hidden"
               aria-expanded={menuOpen}
               aria-controls="mobile-nav"
               onClick={() => setMenuOpen(true)}
@@ -76,8 +76,9 @@ export function Header({ announcement }: { announcement?: string }) {
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "text-sm tracking-[0.02em] text-[var(--header-fg)]/88 transition-colors hover:text-brand-gold",
-                    item.label === "Shop Tea" && "font-semibold text-brand-gold",
+                    "text-sm tracking-[0.04em] text-brand-ink/80 transition-colors hover:text-brand-forest",
+                    item.label === "Shop Tea" &&
+                      "font-semibold text-brand-forest",
                   )}
                 >
                   {item.label}
@@ -92,7 +93,7 @@ export function Header({ announcement }: { announcement?: string }) {
           </div>
 
           {/* Right: utilities */}
-          <div className="flex items-center justify-end gap-1 sm:gap-2">
+          <div className="flex items-center justify-end gap-0.5 sm:gap-1">
             <nav
               aria-label="Secondary"
               className="mr-2 hidden items-center gap-5 lg:flex"
@@ -101,7 +102,7 @@ export function Header({ announcement }: { announcement?: string }) {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="text-sm text-[var(--header-fg)]/88 transition-colors hover:text-brand-gold"
+                  className="text-sm tracking-[0.04em] text-brand-ink/80 transition-colors hover:text-brand-forest"
                 >
                   {item.label}
                 </Link>
@@ -109,7 +110,7 @@ export function Header({ announcement }: { announcement?: string }) {
             </nav>
             <button
               type="button"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-md"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-md text-brand-forest"
               onClick={() => setSearchOpen(true)}
               aria-label="Search"
             >
@@ -117,7 +118,7 @@ export function Header({ announcement }: { announcement?: string }) {
             </button>
             <Link
               href="/account"
-              className="hidden h-11 w-11 items-center justify-center rounded-md sm:inline-flex"
+              className="hidden h-11 w-11 items-center justify-center rounded-md text-brand-forest lg:inline-flex"
               aria-label="Account"
             >
               <User className="h-5 w-5" />
@@ -125,17 +126,17 @@ export function Header({ announcement }: { announcement?: string }) {
             <button
               type="button"
               onClick={openCart}
-              className="relative inline-flex h-11 items-center gap-2 rounded-md px-2"
+              className="relative inline-flex h-11 items-center gap-2 rounded-md px-2 text-brand-forest"
               aria-label={`Cart${itemCount ? ` (${itemCount})` : ""}`}
             >
               <ShoppingBag className="h-5 w-5" />
-              <span className="hidden text-sm sm:inline">
+              <span className="hidden text-sm lg:inline">
                 Cart{itemCount ? ` (${itemCount})` : ""}
               </span>
               {itemCount > 0 && (
                 <span
                   className={cn(
-                    "absolute right-0 top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-cta px-1 text-[11px] font-semibold text-[var(--cta-text)] sm:hidden",
+                    "absolute right-0 top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-cta px-1 text-[11px] font-semibold text-[var(--cta-text)] lg:hidden",
                     badgePop && "cart-badge-pop",
                   )}
                 >
@@ -146,29 +147,14 @@ export function Header({ announcement }: { announcement?: string }) {
           </div>
         </div>
 
-        {/* Desktop category rail */}
-        <div className="hidden border-t border-white/8 lg:block">
-          <div className="container-wide flex items-center justify-center gap-7 px-4 py-2.5">
+        {/* Desktop category rail only — mobile chips moved below hero */}
+        <div className="hidden border-t border-[var(--brand-line)] lg:block">
+          <div className="container-wide flex items-center justify-center gap-7 px-4 py-2">
             {categoryNav.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="text-xs tracking-[0.16em] uppercase text-[var(--header-fg)]/70 transition-colors hover:text-brand-gold"
-              >
-                {item.label}
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        {/* Mobile quick chips */}
-        <div className="border-t border-white/8 lg:hidden">
-          <div className="flex gap-2 overflow-x-auto px-4 py-2.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {mobileQuickNav.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="shrink-0 rounded-full border border-white/15 px-3 py-1.5 text-xs text-[var(--header-fg)]/85"
+                className="text-[11px] tracking-[0.16em] uppercase text-brand-muted transition-colors hover:text-brand-forest"
               >
                 {item.label}
               </Link>
@@ -177,15 +163,14 @@ export function Header({ announcement }: { announcement?: string }) {
         </div>
       </div>
 
-      {/* Mobile menu */}
       {menuOpen && (
         <div
           id="mobile-nav"
-          className="fixed inset-0 z-[60] bg-black/50 lg:hidden"
+          className="fixed inset-0 z-[60] bg-black/40 lg:hidden"
           onClick={() => setMenuOpen(false)}
         >
           <div
-            className="h-full w-[min(22rem,88vw)] bg-[var(--header-bg)] p-5 text-[var(--header-fg)] shadow-2xl"
+            className="h-full w-[min(22rem,88vw)] bg-brand-cream p-5 text-brand-ink shadow-2xl"
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-modal="true"
@@ -207,20 +192,33 @@ export function Header({ announcement }: { announcement?: string }) {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="rounded-md px-3 py-3 text-base hover:bg-white/5"
+                  className="rounded-md px-3 py-3 text-base hover:bg-brand-parchment"
                   onClick={() => setMenuOpen(false)}
                 >
                   {item.label}
                 </Link>
               ))}
+              <Link
+                href="/account"
+                className="rounded-md px-3 py-3 text-base hover:bg-brand-parchment"
+                onClick={() => setMenuOpen(false)}
+              >
+                Account
+              </Link>
+              <Link
+                href="/about"
+                className="rounded-md px-3 py-3 text-base hover:bg-brand-parchment"
+                onClick={() => setMenuOpen(false)}
+              >
+                About
+              </Link>
             </nav>
           </div>
         </div>
       )}
 
-      {/* Search overlay */}
       {searchOpen && (
-        <div className="fixed inset-0 z-[60] bg-black/55 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[60] bg-black/45 p-4 backdrop-blur-sm">
           <div
             role="dialog"
             aria-modal="true"

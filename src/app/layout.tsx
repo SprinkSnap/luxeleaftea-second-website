@@ -4,6 +4,7 @@ import { CartDrawer } from "@/components/cart/CartDrawer";
 import { AIChat } from "@/components/chat/AIChat";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
+import { AnalyticsClickCapture } from "@/components/analytics/AnalyticsClickCapture";
 import { CartProvider } from "@/components/providers/CartProvider";
 import { organizationJsonLd, websiteJsonLd } from "@/lib/seo";
 import { siteConfig } from "@/lib/site";
@@ -21,16 +22,19 @@ const body = Outfit({
   weight: ["300", "400", "500", "600", "700"],
 });
 
-// This is a database-driven storefront deployed to a serverless runtime
-// (Cloudflare Workers). Render on demand so pages read the database at request
-// time (when DATABASE_URL is available) instead of being prerendered at build
-// time. Applies to all nested routes.
+// Cloudflare Workers + live inventory: request-time rendering keeps stock,
+// cart, and catalog data accurate. Do not remove casually — marketing-page
+// ISR would require a separate caching/invalidation strategy so inventory
+// never goes stale.
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: {
-    default: "Lux Leaf Tea — Premium Loose-Leaf Tea",
+    default:
+      siteConfig.market === "CA"
+        ? "Premium Loose Leaf Tea in Canada | Lux Leaf Tea"
+        : "Premium Loose Leaf Tea | Lux Leaf Tea",
     template: "%s | Lux Leaf Tea",
   },
   description: siteConfig.description,
@@ -45,8 +49,9 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
+  const htmlLang = siteConfig.locale.replace("_", "-");
   return (
-    <html lang="en" className={`${display.variable} ${body.variable} h-full`}>
+    <html lang={htmlLang} className={`${display.variable} ${body.variable} h-full`}>
       <body className="min-h-full flex flex-col antialiased">
         <a href="#main" className="skip-link">
           Skip to content
@@ -58,6 +63,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           }}
         />
         <CartProvider>
+          <AnalyticsClickCapture />
           <Header />
           <main id="main" className="flex-1">
             {children}

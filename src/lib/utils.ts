@@ -5,8 +5,12 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatMoney(cents: number, currency = "USD") {
-  return new Intl.NumberFormat("en-US", {
+export function formatMoney(
+  cents: number,
+  currency = process.env.NEXT_PUBLIC_CURRENCY || "USD",
+) {
+  const locale = (process.env.NEXT_PUBLIC_LOCALE || "en-CA").replace("_", "-");
+  return new Intl.NumberFormat(locale, {
     style: "currency",
     currency,
   }).format(cents / 100);
