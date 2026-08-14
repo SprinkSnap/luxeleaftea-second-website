@@ -31,8 +31,7 @@ export function NewsletterForm({ dark = false }: { dark?: boolean }) {
   return (
     <form onSubmit={onSubmit} className="space-y-3">
       <p className={cn("text-sm", dark ? "text-white/80" : "text-brand-muted")}>
-        Join the Lux Leaf Tea Club for new releases, brewing guides, and private
-        offers.
+        Occasional notes on new teas and practical brewing guidance — no spam.
       </p>
       <div className="flex flex-col gap-2 sm:flex-row">
         <label className="sr-only" htmlFor="newsletter-email">

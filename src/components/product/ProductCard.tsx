@@ -10,25 +10,40 @@ import { ecommerce } from "@/lib/analytics";
 import type { SerializedProductCard } from "@/lib/products";
 import { formatMoney } from "@/lib/utils";
 
-export function ProductCard({ product }: { product: SerializedProductCard }) {
+/** Badge priority for CRO: Best Seller → Limited → New → Staff Pick */
+function productBadges(product: SerializedProductCard): string[] {
+  const ordered = [
+    product.isBestSeller ? "Best Seller" : null,
+    product.isLimited ? "Limited Harvest" : null,
+    product.isNew ? "New" : null,
+    product.isStaffPick ? "Staff Pick" : null,
+  ].filter(Boolean) as string[];
+  return ordered.slice(0, 1);
+}
+
+export function ProductCard({
+  product,
+  listName = "catalog",
+}: {
+  product: SerializedProductCard;
+  listName?: string;
+}) {
   const { addItem } = useCart();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [added, setAdded] = useState(false);
   const image = product.images[0] || "/images/products/dragon-well.svg";
-
-  const badges = [
-    product.isBestSeller ? "Best Seller" : null,
-    product.isStaffPick ? "Staff Pick" : null,
-    product.isNew ? "New" : null,
-    product.isLimited ? "Limited Harvest" : null,
-    product.lowStock && product.stockAvailable > 0 ? "Low Stock" : null,
-  ].filter(Boolean) as string[];
+  const badges = productBadges(product);
+  const flavour =
+    product.flavourNotes.slice(0, 3).join(" · ") || product.shortDescription;
 
   async function onAdd() {
     setLoading(true);
     setError(null);
     try {
       await addItem(product.variantId, 1);
+      setAdded(true);
+      window.setTimeout(() => setAdded(false), 1800);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not add to cart");
     } finally {
@@ -41,12 +56,19 @@ export function ProductCard({ product }: { product: SerializedProductCard }) {
       <Link
         href={`/products/${product.slug}`}
         className="relative block overflow-hidden rounded-[var(--radius-md)] bg-brand-mist"
-        onClick={() => ecommerce.selectItem(product)}
+        onClick={() =>
+          ecommerce.selectItem({
+            item_id: product.slug,
+            item_name: product.name,
+            item_list_name: listName,
+            price: product.price / 100,
+          })
+        }
       >
         <div className="relative aspect-[4/5]">
           <Image
             src={image}
-            alt={`${product.name} — ${product.teaType}`}
+            alt={`${product.name} — ${product.teaType} tea`}
             fill
             sizes="(max-width: 768px) 50vw, 25vw"
             className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03] motion-reduce:transition-none"
@@ -54,29 +76,31 @@ export function ProductCard({ product }: { product: SerializedProductCard }) {
         </div>
         {badges.length > 0 && (
           <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
-            {badges.slice(0, 2).map((b) => (
+            {badges.map((b) => (
               <Badge key={b} label={b} />
             ))}
           </div>
         )}
       </Link>
 
-      <div className="mt-4 flex flex-1 flex-col">
-        <p className="text-xs tracking-[0.14em] uppercase text-brand-muted">
+      <div className="mt-3.5 flex flex-1 flex-col sm:mt-4">
+        <p className="text-[0.7rem] tracking-[0.14em] uppercase text-brand-muted">
           {product.teaType}
+          {product.origin ? ` · ${product.origin}` : ""}
         </p>
-        <h3 className="mt-1 font-display text-xl text-brand-forest-deep">
+        <h3 className="mt-1 font-display text-[1.2rem] leading-tight text-brand-forest-deep sm:text-xl">
           <Link href={`/products/${product.slug}`}>{product.name}</Link>
         </h3>
-        <p className="mt-1 text-sm leading-relaxed text-brand-muted">
-          {product.shortDescription}
+        <p className="mt-1 line-clamp-2 text-sm leading-snug text-brand-muted">
+          {flavour}
         </p>
         {product.rating && (
-          <p className="mt-2 text-sm text-brand-ink">
+          <p
+            className="mt-2 text-sm text-brand-ink"
+            aria-label={`${product.rating.average} out of 5 from ${product.rating.count} reviews`}
+          >
             ★ {product.rating.average.toFixed(1)}{" "}
-            <span className="text-brand-muted">
-              ({product.rating.count})
-            </span>
+            <span className="text-brand-muted">({product.rating.count})</span>
           </p>
         )}
         <div className="mt-3 flex items-baseline justify-between gap-3">
@@ -91,15 +115,16 @@ export function ProductCard({ product }: { product: SerializedProductCard }) {
             lowStock={product.lowStock}
           />
         </div>
-        <div className="mt-4">
+        <div className="mt-auto pt-4">
           {product.stockAvailable > 0 ? (
             <button
               type="button"
               onClick={onAdd}
               disabled={loading}
               className="h-11 w-full rounded-[var(--radius-md)] bg-cta text-sm font-medium text-[var(--cta-text)] transition-colors hover:bg-cta-hover disabled:opacity-60"
+              aria-live="polite"
             >
-              {loading ? "Adding…" : "Add to Cart"}
+              {loading ? "Adding…" : added ? "Added to cart" : "Add to Cart"}
             </button>
           ) : (
             <Link

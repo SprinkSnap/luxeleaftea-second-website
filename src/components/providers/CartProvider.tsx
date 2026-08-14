@@ -105,7 +105,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
       const cart = (await res.json()) as CartResponse;
       applyCart(cart);
-      setIsOpen(true);
+      // Keep shoppers in context — success feedback lives on the CTA.
       ecommerce.addToCart({ variantId, quantity });
     },
     [applyCart],

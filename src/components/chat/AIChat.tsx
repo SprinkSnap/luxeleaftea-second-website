@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { MessageCircle, X } from "lucide-react";
 import { ProductCard } from "@/components/product/ProductCard";
 import { ecommerce } from "@/lib/analytics";
 import type { SerializedProductCard } from "@/lib/products";
+import { cn } from "@/lib/utils";
 
 type Message = {
   role: "assistant" | "user";
@@ -12,8 +14,16 @@ type Message = {
   products?: SerializedProductCard[];
 };
 
+/**
+ * Tea Assistant is a supporting sales tool.
+ * Mobile: icon-only, revealed after scrolling past the first viewport;
+ * never auto-opens; respects safe-area; stays below cart drawer z-index.
+ */
 export function AIChat() {
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [expandedLabel, setExpandedLabel] = useState(false);
+  const [visible, setVisible] = useState(false);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string>();
@@ -21,9 +31,40 @@ export function AIChat() {
     {
       role: "assistant",
       content:
-        "Hello — I’m Lux Leaf’s AI shopping assistant. I can help you discover teas from our catalog by flavour, caffeine, and occasion. I won’t invent products, prices, or policies.",
+        "Hello — I’m Lux Leaf’s tea assistant. I can help you discover teas from our catalog by flavour, caffeine, and occasion. I won’t invent products, prices, or policies.",
     },
   ]);
+
+  const onProductPage = pathname?.startsWith("/products/");
+  const onCheckoutFlow =
+    pathname === "/cart" ||
+    pathname === "/checkout" ||
+    pathname?.startsWith("/order/");
+
+  useEffect(() => {
+    const reveal = () => {
+      const pastHero = window.scrollY > Math.min(window.innerHeight * 0.55, 420);
+      setVisible(pastHero);
+      if (pastHero && window.innerWidth >= 768) {
+        setExpandedLabel(true);
+      }
+    };
+    reveal();
+    window.addEventListener("scroll", reveal, { passive: true });
+    window.addEventListener("resize", reveal, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", reveal);
+      window.removeEventListener("resize", reveal);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!visible) return;
+    const t = window.setTimeout(() => {
+      if (window.innerWidth >= 768) setExpandedLabel(true);
+    }, 1200);
+    return () => window.clearTimeout(t);
+  }, [visible]);
 
   async function send() {
     const message = input.trim();
@@ -67,20 +108,35 @@ export function AIChat() {
     }
   }
 
+  if (onCheckoutFlow) return null;
+
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="fixed bottom-20 right-4 z-40 inline-flex h-12 items-center gap-2 rounded-full bg-brand-forest px-4 text-sm font-medium text-white shadow-lg md:bottom-6"
-        aria-haspopup="dialog"
-      >
-        <MessageCircle className="h-4 w-4" />
-        Tea Assistant
-      </button>
+      {visible && (
+        <button
+          type="button"
+          onClick={() => {
+            setOpen(true);
+            setExpandedLabel(true);
+          }}
+          onMouseEnter={() => setExpandedLabel(true)}
+          className={cn(
+            "fixed right-4 z-[35] inline-flex h-12 items-center gap-2 rounded-full bg-brand-forest text-sm font-medium text-white shadow-lg transition-[padding,width] duration-300",
+            "bottom-[max(1.25rem,env(safe-area-inset-bottom))]",
+            onProductPage &&
+              "max-md:bottom-[calc(4.75rem+env(safe-area-inset-bottom))]",
+            expandedLabel ? "px-4" : "w-12 justify-center px-0",
+          )}
+          aria-haspopup="dialog"
+          aria-label="Open Tea Assistant"
+        >
+          <MessageCircle className="h-4 w-4 shrink-0" aria-hidden />
+          {expandedLabel ? <span>Tea Assistant</span> : null}
+        </button>
+      )}
 
       {open && (
-        <div className="fixed inset-0 z-[80] flex items-end justify-end bg-black/30 p-3 sm:items-center sm:p-6">
+        <div className="fixed inset-0 z-[60] flex items-end justify-end bg-black/30 p-3 sm:items-center sm:p-6">
           <div
             role="dialog"
             aria-modal="true"
@@ -122,7 +178,7 @@ export function AIChat() {
                           key={product.id}
                           onClick={() => ecommerce.aiAddToCart(product.id)}
                         >
-                          <ProductCard product={product} />
+                          <ProductCard product={product} listName="ai_assistant" />
                         </div>
                       ))}
                     </div>
@@ -136,7 +192,7 @@ export function AIChat() {
               )}
             </div>
             <form
-              className="flex gap-2 border-t border-[var(--brand-line)] p-3"
+              className="flex gap-2 border-t border-[var(--brand-line)] p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
               onSubmit={(e) => {
                 e.preventDefault();
                 void send();

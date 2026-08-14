@@ -7,6 +7,7 @@ export const metadata = createMetadata({
   title: "Search",
   description: "Search Lux Leaf Tea products, collections, and tea guides.",
   path: "/search",
+  noIndex: true,
 });
 
 type Props = { searchParams: Promise<{ q?: string }> };

@@ -22,7 +22,9 @@ export function getDefaultVariant(product: ProductCardData) {
   return product.variants.find((v) => v.isDefault) || product.variants[0] || null;
 }
 
-export function getReviewSummary(product: ProductCardData) {
+export function getReviewSummary(product: {
+  reviews: { rating: number }[];
+}) {
   if (!product.reviews.length) return null;
   const count = product.reviews.length;
   const average =

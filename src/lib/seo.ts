@@ -6,6 +6,14 @@ export function absoluteUrl(path = "/") {
   return path.startsWith("http") ? path : `${base}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
+/** Strip brand suffix so the root title template does not duplicate “Lux Leaf Tea”. */
+export function cleanPageTitle(title: string) {
+  return title
+    .replace(/\s*[|—–-]\s*Lux Leaf Tea(?:\s+Guide)?\s*$/i, "")
+    .replace(/\s+Lux Leaf Tea\s*$/i, "")
+    .trim();
+}
+
 export function createMetadata({
   title,
   description,
@@ -19,40 +27,58 @@ export function createMetadata({
   image?: string;
   noIndex?: boolean;
 }): Metadata {
+  const pageTitle = cleanPageTitle(title);
   const url = absoluteUrl(path);
-  const ogImage = absoluteUrl(image || siteConfig.logo.desktop);
+  const ogTitle = pageTitle;
 
   return {
-    title,
+    title: pageTitle,
     description,
     alternates: { canonical: url },
     openGraph: {
-      title,
+      title: ogTitle,
       description,
       url,
       siteName: siteConfig.name,
       locale: siteConfig.locale,
       type: "website",
-      images: [{ url: ogImage, alt: title }],
+      ...(image
+        ? { images: [{ url: absoluteUrl(image), alt: pageTitle }] }
+        : {}),
     },
     twitter: {
       card: "summary_large_image",
-      title,
+      title: ogTitle,
       description,
-      images: [ogImage],
+      ...(image ? { images: [absoluteUrl(image)] } : {}),
     },
-    robots: noIndex ? { index: false, follow: false } : { index: true, follow: true },
+    // Search results: noindex,follow so crawlers can still see the directive
+    robots: noIndex
+      ? { index: false, follow: true }
+      : { index: true, follow: true },
   };
 }
 
 export function organizationJsonLd() {
+  const sameAs = Object.values(siteConfig.social).filter(Boolean);
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: siteConfig.name,
+    legalName: siteConfig.legalName,
     url: siteConfig.url,
     logo: absoluteUrl(siteConfig.logo.desktop),
     email: siteConfig.supportEmail,
+    ...(sameAs.length ? { sameAs } : {}),
+    hasMerchantReturnPolicy: {
+      "@type": "MerchantReturnPolicy",
+      applicableCountry: siteConfig.market === "CA" ? "CA" : "US",
+      returnPolicyCategory:
+        "https://schema.org/MerchantReturnFiniteReturnWindow",
+      merchantReturnDays: 30,
+      returnMethod: "https://schema.org/ReturnByMail",
+      url: absoluteUrl("/returns"),
+    },
   };
 }
 
@@ -83,6 +109,22 @@ export function breadcrumbJsonLd(items: { name: string; path: string }[]) {
   };
 }
 
+type ProductOfferInput = {
+  sku: string;
+  url: string;
+  price: number;
+  currency?: string;
+  availability: "InStock" | "OutOfStock" | "PreOrder";
+  packageSize?: string;
+};
+
+type ProductReviewInput = {
+  authorName: string;
+  rating: number;
+  body: string;
+  datePublished?: string;
+};
+
 export function productJsonLd(product: {
   name: string;
   description: string;
@@ -93,7 +135,36 @@ export function productJsonLd(product: {
   currency?: string;
   availability: "InStock" | "OutOfStock" | "PreOrder";
   brand?: string;
+  offers?: ProductOfferInput[];
+  aggregateRating?: { ratingValue: number; reviewCount: number } | null;
+  reviews?: ProductReviewInput[];
 }) {
+  const currency = product.currency || siteConfig.currency;
+  const offers =
+    product.offers && product.offers.length > 0
+      ? product.offers.map((offer) => ({
+          "@type": "Offer" as const,
+          sku: offer.sku,
+          url: absoluteUrl(offer.url),
+          priceCurrency: offer.currency || currency,
+          price: (offer.price / 100).toFixed(2),
+          availability: `https://schema.org/${offer.availability}`,
+          itemCondition: "https://schema.org/NewCondition",
+          ...(offer.packageSize
+            ? { name: `${product.name} — ${offer.packageSize}` }
+            : {}),
+        }))
+      : [
+          {
+            "@type": "Offer" as const,
+            url: absoluteUrl(`/products/${product.slug}`),
+            priceCurrency: currency,
+            price: (product.price / 100).toFixed(2),
+            availability: `https://schema.org/${product.availability}`,
+            itemCondition: "https://schema.org/NewCondition",
+          },
+        ];
+
   return {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -105,13 +176,45 @@ export function productJsonLd(product: {
       "@type": "Brand",
       name: product.brand || siteConfig.name,
     },
-    offers: {
-      "@type": "Offer",
-      url: absoluteUrl(`/products/${product.slug}`),
-      priceCurrency: product.currency || siteConfig.currency,
-      price: (product.price / 100).toFixed(2),
-      availability: `https://schema.org/${product.availability}`,
-      itemCondition: "https://schema.org/NewCondition",
-    },
+    url: absoluteUrl(`/products/${product.slug}`),
+    offers:
+      offers.length > 1
+        ? {
+            "@type": "AggregateOffer",
+            priceCurrency: currency,
+            lowPrice: Math.min(
+              ...offers.map((o) => Number(o.price)),
+            ).toFixed(2),
+            highPrice: Math.max(
+              ...offers.map((o) => Number(o.price)),
+            ).toFixed(2),
+            offerCount: offers.length,
+            offers,
+          }
+        : offers[0],
+    ...(product.aggregateRating && product.aggregateRating.reviewCount > 0
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: product.aggregateRating.ratingValue.toFixed(1),
+            reviewCount: product.aggregateRating.reviewCount,
+          },
+        }
+      : {}),
+    ...(product.reviews && product.reviews.length > 0
+      ? {
+          review: product.reviews.map((r) => ({
+            "@type": "Review",
+            reviewRating: {
+              "@type": "Rating",
+              ratingValue: r.rating,
+              bestRating: 5,
+            },
+            author: { "@type": "Person", name: r.authorName },
+            reviewBody: r.body,
+            ...(r.datePublished ? { datePublished: r.datePublished } : {}),
+          })),
+        }
+      : {}),
   };
 }

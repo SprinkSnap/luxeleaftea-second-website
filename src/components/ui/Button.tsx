@@ -65,15 +65,20 @@ export function ButtonLink({
   size = "md",
   className,
   children,
+  ...props
 }: {
   href: string;
   variant?: Variant;
   size?: Size;
   className?: string;
   children: ReactNode;
-}) {
+} & React.AnchorHTMLAttributes<HTMLAnchorElement>) {
   return (
-    <Link href={href} className={buttonClasses({ variant, size, className })}>
+    <Link
+      href={href}
+      className={buttonClasses({ variant, size, className })}
+      {...props}
+    >
       {children}
     </Link>
   );
