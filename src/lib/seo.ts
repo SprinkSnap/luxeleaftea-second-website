@@ -68,6 +68,10 @@ export function organizationJsonLd() {
     url: siteConfig.url,
     logo: absoluteUrl(siteConfig.logo.desktop),
     email: siteConfig.supportEmail,
+    ...(siteConfig.supportPhone?.trim()
+      ? { telephone: siteConfig.supportPhone.trim() }
+      : {}),
+    ...(siteConfig.market === "CA" ? { areaServed: "CA" } : {}),
     ...(sameAs.length ? { sameAs } : {}),
     hasMerchantReturnPolicy: {
       "@type": "MerchantReturnPolicy",

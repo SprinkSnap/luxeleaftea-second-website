@@ -37,6 +37,11 @@ export async function searchAll(q: string, limit = 8) {
     { flavourNotes: { contains: term } },
     { ingredients: { contains: term } },
     { shortDescription: { contains: term } },
+    { description: { contains: term } },
+    { caffeineLevel: { contains: term } },
+    { strength: { contains: term } },
+    { timeOfDay: { contains: term } },
+    { variants: { some: { sku: { contains: term } } } },
   ]);
 
   // Avoid falsely treating caffeinated tea as decaf

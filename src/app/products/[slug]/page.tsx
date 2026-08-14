@@ -19,23 +19,22 @@ import {
 } from "@/lib/products";
 import { prisma } from "@/lib/prisma";
 import { parseJsonArray, stockAvailable } from "@/lib/utils";
+import { collectionSlugForTeaType, siteConfig } from "@/lib/site";
 
 type Props = { params: Promise<{ slug: string }> };
 
-const collectionByTeaType: Record<string, string> = {
-  Green: "green-tea",
-  Black: "black-tea",
-  Oolong: "oolong",
-  White: "white-tea",
-  Herbal: "herbal",
-  "Pu-erh": "pu-erh",
-  Matcha: "matcha",
-};
-
 const guideByTeaType: Record<string, { href: string; label: string }> = {
+  "Green Tea": {
+    href: "/tea-guide/green-tea-brewing-temperature-guide",
+    label: "Green tea brewing guide",
+  },
   Green: {
     href: "/tea-guide/green-tea-brewing-temperature-guide",
     label: "Green tea brewing guide",
+  },
+  "Black Tea": {
+    href: "/tea-guide/black-tea-vs-green-tea",
+    label: "Black tea vs green tea",
   },
   Black: {
     href: "/tea-guide/black-tea-vs-green-tea",
@@ -44,6 +43,10 @@ const guideByTeaType: Record<string, { href: string; label: string }> = {
   Oolong: {
     href: "/tea-guide/what-is-oolong-tea",
     label: "What is oolong tea?",
+  },
+  "White Tea": {
+    href: "/tea-guide/how-to-brew-loose-leaf-tea",
+    label: "How to brew loose leaf tea",
   },
   White: {
     href: "/tea-guide/how-to-brew-loose-leaf-tea",
@@ -240,11 +243,28 @@ export default async function ProductPage({ params }: Props) {
               cupsEstimate={product.cupsEstimate}
             />
           </div>
+          <p className="mt-4 text-sm text-brand-muted">
+            Not sure this is the right tea?{" "}
+            <Link
+              href="/find-your-tea"
+              className="font-medium text-brand-forest underline-offset-2 hover:underline"
+            >
+              Find Your Tea
+            </Link>{" "}
+            or{" "}
+            <Link
+              href="/contact"
+              className="font-medium text-brand-forest underline-offset-2 hover:underline"
+            >
+              Contact us
+            </Link>
+            .
+          </p>
         </div>
       </div>
 
       <section className="mt-16">
-        <h2 className="font-display text-2xl md:text-3xl">Flavour profile</h2>
+        <h2 className="font-display text-2xl md:text-3xl">What it tastes like</h2>
         <div className="mt-6">
           <TeaProfile
             aroma={product.aromaScore}
@@ -260,7 +280,7 @@ export default async function ProductPage({ params }: Props) {
       <section className="mt-16 grid gap-10 lg:grid-cols-2">
         <div>
           <h2 className="font-display text-2xl md:text-3xl">
-            Why this tea is special
+            Why you’ll like it
           </h2>
           <div className="prose-tea mt-4">
             <p>{product.description}</p>
@@ -295,9 +315,7 @@ export default async function ProductPage({ params }: Props) {
 
       <section className="mt-16 grid gap-10 lg:grid-cols-2">
         <div>
-          <h2 className="font-display text-2xl md:text-3xl">
-            Brewing instructions
-          </h2>
+          <h2 className="font-display text-2xl md:text-3xl">How to brew</h2>
           <div className="mt-6">
             <BrewingGuide
               amount={product.brewingAmount}
@@ -383,7 +401,7 @@ export default async function ProductPage({ params }: Props) {
               You may also like
             </h2>
             <Link
-              href={`/collections/${collectionByTeaType[product.teaType] || "best-sellers"}`}
+              href={`/collections/${collectionSlugForTeaType(product.teaType)}`}
               className="text-sm font-medium text-brand-forest underline-offset-4 hover:underline"
             >
               More {product.teaType}
@@ -392,6 +410,37 @@ export default async function ProductPage({ params }: Props) {
           <ProductGrid products={related} />
         </section>
       )}
+
+      <section className="mt-16 rounded-[var(--radius-lg)] border border-[var(--brand-line)] bg-brand-mist/50 p-5 md:p-6">
+        <h2 className="font-display text-2xl">Shipping &amp; returns</h2>
+        <p className="mt-2 text-sm text-brand-muted">
+          Prices in {siteConfig.currency}. Guest checkout welcome. See our{" "}
+          <Link href="/shipping" className="underline underline-offset-2">
+            shipping
+          </Link>{" "}
+          and{" "}
+          <Link href="/returns" className="underline underline-offset-2">
+            returns
+          </Link>{" "}
+          pages for details.
+        </p>
+        <p className="mt-3 text-sm text-brand-muted">
+          Questions about this tea?{" "}
+          <Link
+            href="/contact"
+            className="font-medium text-brand-forest underline-offset-2 hover:underline"
+          >
+            Contact us
+          </Link>
+          {" · "}
+          <Link
+            href="/find-your-tea"
+            className="font-medium text-brand-forest underline-offset-2 hover:underline"
+          >
+            Find Your Tea
+          </Link>
+        </p>
+      </section>
       <div className="h-20 md:hidden" aria-hidden />
     </div>
   );

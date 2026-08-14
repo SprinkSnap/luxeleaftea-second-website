@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useCart } from "@/components/providers/CartProvider";
 import { StockIndicator } from "@/components/product/StockIndicator";
 import { formatMoney } from "@/lib/utils";
+import { freeShippingLabel, siteConfig } from "@/lib/site";
 
 export function AddToCartPanel({
   variantId,
@@ -162,11 +163,18 @@ export function AddToCartPanel({
           </p>
         )}
         <ul className="space-y-1.5 text-xs text-brand-muted">
-          <li>Free shipping on orders over $50</li>
-          <li>Secure checkout · Guest checkout welcome</li>
+          <li>{freeShippingLabel()}</li>
+          <li>
+            Prices in {siteConfig.currency} · Secure checkout · Guest checkout
+            welcome
+          </li>
           <li>
             <Link href="/returns" className="underline-offset-2 hover:underline">
               Returns &amp; exchanges
+            </Link>
+            {" · "}
+            <Link href="/contact" className="underline-offset-2 hover:underline">
+              Need help?
             </Link>
           </li>
         </ul>

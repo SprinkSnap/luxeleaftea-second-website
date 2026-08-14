@@ -5,7 +5,7 @@ import { confirmReservationForPayment, reserveInventory } from "@/lib/inventory"
 import { prisma } from "@/lib/prisma";
 import { absoluteUrl, getStripe, stripeEnabled } from "@/lib/stripe";
 import { siteConfig } from "@/lib/site";
-import { parseJsonArray } from "@/lib/utils";
+import { parseJsonArray, shippingCostForSubtotal, stripeCurrency } from "@/lib/utils";
 
 export async function POST(request: Request) {
   try {
@@ -20,30 +20,42 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Your cart is empty" }, { status: 400 });
     }
 
+    const currency = stripeCurrency();
     const subtotal = cartSubtotal(cart);
-    const shippingCost = subtotal >= siteConfig.freeShippingThreshold ? 0 : 695;
-    const taxAmount = Math.round(subtotal * 0.08);
+    const shippingCost = shippingCostForSubtotal(subtotal);
+    /**
+     * Do NOT assume a flat Canadian sales tax (GST/HST/PST vary by province
+     * and business registration). Prefer Stripe Tax when available; otherwise
+     * taxAmount stays 0 on the order record and Stripe/checkout collects tax.
+     */
+    const taxAmount = 0;
     const total = subtotal + shippingCost + taxAmount;
     const orderNumber = `LLT-${nanoid(8).toUpperCase()}`;
+    const country = String(body.country || siteConfig.defaultCountry || "CA")
+      .trim()
+      .toUpperCase()
+      .slice(0, 2);
 
     const order = await prisma.order.create({
       data: {
         orderNumber,
         email,
         status: "AWAITING_PAYMENT",
+        currency: siteConfig.currency,
         subtotal,
         shippingCost,
         taxAmount,
         total,
         shippingName: body.name || null,
         shippingLine1: body.line1 || null,
+        shippingLine2: body.line2 || null,
         shippingCity: body.city || null,
         shippingRegion: body.region || null,
         shippingPostal: body.postalCode || null,
-        shippingCountry: body.country || "US",
+        shippingCountry: country,
         isGift: Boolean(body.isGift),
         giftMessage: body.giftMessage || null,
-        estimatedDelivery: "3–5 business days",
+        estimatedDelivery: null,
         items: {
           create: cart.items.map((item) => ({
             variantId: item.variantId,
@@ -73,8 +85,8 @@ export async function POST(request: Request) {
 
     if (stripeEnabled()) {
       const stripe = getStripe()!;
-      const session = await stripe.checkout.sessions.create({
-        mode: "payment",
+      const baseParams = {
+        mode: "payment" as const,
         customer_email: email,
         client_reference_id: order.id,
         success_url: absoluteUrl(`/order/${order.id}?success=1`),
@@ -82,7 +94,7 @@ export async function POST(request: Request) {
         line_items: cart.items.map((item) => ({
           quantity: item.quantity,
           price_data: {
-            currency: "usd",
+            currency,
             unit_amount: item.variant.retailPrice,
             product_data: {
               name: item.variant.product.name,
@@ -93,14 +105,38 @@ export async function POST(request: Request) {
         shipping_options: [
           {
             shipping_rate_data: {
-              type: "fixed_amount",
-              fixed_amount: { amount: shippingCost, currency: "usd" },
-              display_name: shippingCost === 0 ? "Free shipping" : "Standard shipping",
+              type: "fixed_amount" as const,
+              fixed_amount: { amount: shippingCost, currency },
+              display_name:
+                shippingCost === 0 ? "Free shipping" : "Standard shipping",
             },
           },
         ],
-        metadata: { orderId: order.id, orderNumber },
-      });
+        metadata: {
+          orderId: order.id,
+          orderNumber,
+          currency: siteConfig.currency,
+        },
+        billing_address_collection: "auto" as const,
+        phone_number_collection: { enabled: true },
+      };
+
+      let session;
+      try {
+        session = await stripe.checkout.sessions.create({
+          ...baseParams,
+          automatic_tax: { enabled: true },
+        });
+      } catch (taxError) {
+        // Retry without automatic_tax if the Stripe account lacks Tax setup
+        const msg =
+          taxError instanceof Error ? taxError.message.toLowerCase() : "";
+        if (/tax|automatic/i.test(msg)) {
+          session = await stripe.checkout.sessions.create(baseParams);
+        } else {
+          throw taxError;
+        }
+      }
 
       await prisma.inventoryReservation.updateMany({
         where: { orderId: order.id, status: "ACTIVE" },
@@ -117,6 +153,7 @@ export async function POST(request: Request) {
         url: session.url,
         orderId: order.id,
         orderNumber,
+        currency: siteConfig.currency,
       });
     }
 
@@ -148,6 +185,7 @@ export async function POST(request: Request) {
       url: `/order/${order.id}?success=1`,
       orderId: order.id,
       orderNumber,
+      currency: siteConfig.currency,
     });
   } catch (error) {
     return NextResponse.json(

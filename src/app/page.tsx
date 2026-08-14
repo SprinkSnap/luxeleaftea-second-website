@@ -8,7 +8,7 @@ import { NewsletterForm } from "@/components/home/NewsletterForm";
 import { ButtonLink } from "@/components/ui/Button";
 import { getFeaturedProducts } from "@/lib/products";
 import { createMetadata } from "@/lib/seo";
-import { mobileQuickNav, siteConfig } from "@/lib/site";
+import { freeShippingLabel, mobileQuickNav, siteConfig } from "@/lib/site";
 import { prisma } from "@/lib/prisma";
 import { TrackOnce } from "@/components/analytics/TrackOnce";
 
@@ -19,7 +19,10 @@ const homepageTitle =
 
 export const metadata = createMetadata({
   title: homepageTitle,
-  description: siteConfig.description,
+  description:
+    siteConfig.market === "CA"
+      ? "Buy premium loose-leaf green, black, oolong, white and herbal tea in Canada. Prices in CAD. Find your perfect cup with brewing guidance from Lux Leaf Tea."
+      : siteConfig.description,
   path: "/",
 });
 
@@ -92,29 +95,29 @@ export default async function HomePage() {
         payload={{ item_list_name: "homepage_best_sellers", items: products }}
       />
 
-      {/* Section 1 — Editorial hero */}
+      {/* 1 — Compact premium hero */}
       <section className="relative overflow-hidden bg-brand-cream">
-        <div className="container-wide grid items-center gap-8 px-4 py-10 md:grid-cols-[1.1fr_0.9fr] md:gap-10 md:py-14 lg:min-h-[min(72svh,40rem)] lg:gap-14 lg:py-16">
+        <div className="container-wide grid items-center gap-6 px-4 py-8 md:grid-cols-[1.15fr_0.85fr] md:gap-10 md:py-12 lg:min-h-[min(58svh,34rem)] lg:gap-12 lg:py-14">
           <div className="max-w-xl animate-fade-up">
-            <p className="text-[11px] tracking-[0.22em] uppercase text-brand-muted">
-              Premium Loose-Leaf Tea
+            <p className="font-display text-[1.65rem] leading-none text-brand-forest-deep sm:text-3xl">
+              Lux Leaf Tea
             </p>
-            <h1 className="mt-3 font-display text-[2.35rem] leading-[1.08] text-brand-forest-deep sm:text-5xl lg:text-[3.35rem]">
-              Exceptional Loose-Leaf Tea, Chosen for the Cup.
+            <h1 className="mt-3 font-display text-[2.05rem] leading-[1.1] text-brand-forest-deep sm:text-4xl lg:text-[2.85rem]">
+              Premium loose-leaf tea, easy to choose.
             </h1>
-            <p className="mt-4 max-w-md text-base leading-relaxed text-brand-muted sm:text-lg">
-              Explore carefully selected whole-leaf teas chosen for flavour,
-              aroma, origin and character — with simple brewing guidance for
-              every cup.
+            <p className="mt-3 max-w-md text-base leading-relaxed text-brand-muted sm:text-lg">
+              Green, black, oolong, white, herbal and more — selected for
+              flavour, with simple brewing notes for every cup. Prices in{" "}
+              {siteConfig.currency}.
             </p>
-            <div className="mt-7 flex flex-wrap items-center gap-3">
+            <div className="mt-6 flex flex-wrap items-center gap-3">
               <ButtonLink
-                href="/collections/best-sellers"
+                href="/shop"
                 size="lg"
-                className="min-w-[10.5rem]"
+                className="min-w-[10rem]"
                 data-analytics="hero_primary_cta"
               >
-                Shop Best Sellers
+                Shop Tea
               </ButtonLink>
               <ButtonLink
                 href="/find-your-tea"
@@ -125,43 +128,58 @@ export default async function HomePage() {
                 Find Your Tea
               </ButtonLink>
             </div>
-            <Link
-              href="/shop"
-              className="mt-4 inline-block text-sm font-medium text-brand-forest underline-offset-4 hover:underline"
-            >
-              Shop All Tea →
-            </Link>
           </div>
           <HeroVisual hasPhoto={hasHeroPhoto} />
         </div>
       </section>
 
-      {/* Mobile discovery chips — below hero */}
-      <div className="border-y border-[var(--brand-line)] bg-white/60 lg:hidden">
-        <div className="flex gap-2 overflow-x-auto px-4 py-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {mobileQuickNav.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="shrink-0 rounded-full border border-[var(--brand-line)] bg-brand-cream px-3.5 py-2 text-xs text-brand-ink"
+      {/* 2 — Search / shop path (mobile-first) */}
+      <section className="border-y border-[var(--brand-line)] bg-white/70">
+        <div className="container-wide px-4 py-4 md:py-5">
+          <form
+            action="/search"
+            className="flex flex-col gap-2 sm:flex-row sm:items-center"
+          >
+            <label className="sr-only" htmlFor="home-search">
+              Search tea, flavour, origin
+            </label>
+            <input
+              id="home-search"
+              name="q"
+              placeholder="Search tea, flavour, origin…"
+              className="h-12 flex-1 rounded-[var(--radius-md)] border border-[var(--brand-line)] bg-white px-4 text-base"
+            />
+            <button
+              type="submit"
+              className="h-12 rounded-[var(--radius-md)] bg-brand-forest px-5 text-sm font-medium text-white"
             >
-              {item.label}
-            </Link>
-          ))}
+              Search
+            </button>
+          </form>
+          <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:hidden">
+            {mobileQuickNav.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="shrink-0 rounded-full border border-[var(--brand-line)] bg-brand-cream px-3.5 py-2.5 text-xs text-brand-ink"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
         </div>
-      </div>
+      </section>
 
-      {/* Section 2 — Trust */}
       <TrustStrip />
 
-      {/* Section 3 — Best Sellers */}
-      <section className="container-wide px-4 py-14 md:py-18">
-        <div className="mb-8 flex items-end justify-between gap-4">
+      {/* 3 — Best Sellers (products quickly) */}
+      <section className="container-wide px-4 py-10 md:py-14">
+        <div className="mb-6 flex items-end justify-between gap-4 md:mb-8">
           <div>
             <h2 className="font-display text-3xl md:text-4xl">Best Sellers</h2>
             <p className="mt-2 max-w-xl text-brand-muted">
-              Start with teas customers return to — clear flavour, honest
-              sourcing, and easy brewing.
+              Start with teas customers return to — clear flavour and easy
+              brewing.
             </p>
           </div>
           <Link
@@ -172,14 +190,50 @@ export default async function HomePage() {
           </Link>
         </div>
         <ProductGrid products={products} />
+        <Link
+          href="/collections/best-sellers"
+          className="mt-6 inline-flex text-sm font-medium text-brand-forest underline-offset-4 hover:underline sm:hidden"
+        >
+          View all best sellers →
+        </Link>
       </section>
 
-      {/* Section 4 — Find Your Tea */}
-      <section className="section-soft border-y border-[var(--brand-line)]">
-        <div className="container-wide grid items-center gap-8 px-4 py-14 md:grid-cols-[1.2fr_0.8fr] md:py-16">
+      {/* 4 — Shop by Tea Type */}
+      <section className="border-y border-[var(--brand-line)] bg-white/60">
+        <div className="container-wide px-4 py-10 md:py-14">
+          <div className="mb-6 md:mb-8">
+            <h2 className="font-display text-3xl md:text-4xl">
+              Shop by Tea Type
+            </h2>
+            <p className="mt-2 text-brand-muted">
+              Browse the way you would walk through a tea shop.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7">
+            {teaTypes.map((type) => (
+              <Link
+                key={type.slug}
+                href={`/collections/${type.slug}`}
+                className="min-h-[5.5rem] rounded-[var(--radius-md)] border border-[var(--brand-line)] bg-white/90 px-3 py-4 text-center transition-colors hover:border-brand-gold hover:bg-white"
+              >
+                <span className="font-display text-xl text-brand-forest-deep">
+                  {type.name}
+                </span>
+                <span className="mt-1 block text-xs text-brand-muted">
+                  {type.blurb}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 5 — Find Your Tea */}
+      <section className="section-soft">
+        <div className="container-wide grid items-center gap-8 px-4 py-12 md:grid-cols-[1.2fr_0.8fr] md:py-14">
           <div>
             <h2 className="font-display text-3xl md:text-4xl">
-              Not Sure Where to Start?
+              Not sure which tea suits you?
             </h2>
             <p className="mt-3 max-w-lg text-brand-muted">
               Tell us what flavours, caffeine level and tea moment you prefer.
@@ -191,7 +245,7 @@ export default async function HomePage() {
               className="mt-6"
               data-analytics="find_tea_cta"
             >
-              Find My Tea
+              Find Your Tea
             </ButtonLink>
           </div>
           <div className="editorial-frame relative aspect-[5/4] overflow-hidden rounded-[var(--radius-lg)] p-8">
@@ -201,7 +255,7 @@ export default async function HomePage() {
             </div>
             <div className="relative flex h-full flex-col justify-end">
               <p className="font-display text-2xl text-brand-forest-deep">
-                Concierge tea matching
+                We’ll help you find one
               </p>
               <p className="mt-2 text-sm text-brand-muted">
                 Flavour · caffeine · strength · occasion
@@ -211,40 +265,15 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Section 5 — Shop by Tea Type */}
-      <section className="container-wide px-4 py-14 md:py-16">
-        <div className="mb-8">
-          <h2 className="font-display text-3xl md:text-4xl">Shop by Tea Type</h2>
-          <p className="mt-2 text-brand-muted">
-            Browse the leaf styles that define Lux Leaf.
-          </p>
-        </div>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7">
-          {teaTypes.map((type) => (
-            <Link
-              key={type.slug}
-              href={`/collections/${type.slug}`}
-              className="rounded-[var(--radius-md)] border border-[var(--brand-line)] bg-white/80 px-3 py-5 text-center transition-colors hover:border-brand-gold hover:bg-white"
-            >
-              <span className="font-display text-xl text-brand-forest-deep">
-                {type.name}
-              </span>
-              <span className="mt-1 block text-xs text-brand-muted">
-                {type.blurb}
-              </span>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* Section 6 — Why Lux Leaf */}
+      {/* 6 — Why Lux Leaf */}
       <section className="border-y border-[var(--brand-line)] bg-white/70">
-        <div className="container-wide px-4 py-14 md:py-16">
+        <div className="container-wide px-4 py-12 md:py-14">
           <h2 className="font-display text-3xl md:text-4xl">
             Why Lux Leaf Tea
           </h2>
           <p className="mt-2 max-w-xl text-brand-muted">
-            A modern tea boutique — premium without pretension.
+            A modern Canadian tea boutique — premium without pretension.{" "}
+            {freeShippingLabel()}.
           </p>
           <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {values.map((value) => (
@@ -261,13 +290,13 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Section 7 — Tea Guide */}
-      <section className="container-wide px-4 py-14 md:py-16">
+      {/* 7 — Tea Guide */}
+      <section className="container-wide px-4 py-12 md:py-14">
         <div className="mb-8 flex items-end justify-between gap-4">
           <div>
             <h2 className="font-display text-3xl md:text-4xl">Tea Guide</h2>
             <p className="mt-2 text-brand-muted">
-              Practical education that makes premium tea feel approachable.
+              Practical notes that make premium tea feel approachable.
             </p>
           </div>
           <Link
@@ -296,12 +325,12 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Section 8 — Newsletter */}
+      {/* 8 — Newsletter */}
       <section className="section-soft border-t border-[var(--brand-line)]">
-        <div className="container-wide px-4 py-14 md:py-16">
+        <div className="container-wide px-4 py-12 md:py-14">
           <div className="mx-auto max-w-xl text-center">
             <h2 className="font-display text-3xl text-brand-forest-deep">
-              A Better Cup, Occasionally in Your Inbox
+              A better cup, occasionally in your inbox
             </h2>
             <p className="mt-3 text-brand-muted">
               New tea releases and practical brewing notes — never spam.
