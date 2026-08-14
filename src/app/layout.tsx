@@ -42,6 +42,18 @@ export const metadata: Metadata = {
     siteName: siteConfig.name,
     type: "website",
     locale: siteConfig.locale,
+    images: [
+      {
+        url: siteConfig.ogImage,
+        width: 1200,
+        height: 630,
+        alt: "Lux Leaf Tea — Premium loose-leaf tea",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: [siteConfig.ogImage],
   },
   icons: {
     icon: siteConfig.logo.mobile,
